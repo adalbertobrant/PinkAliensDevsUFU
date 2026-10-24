@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antecipe — Validação de Lote de Recebíveis</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1f2937; }
+    h1 { font-size: 1.5rem; }
+    .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; margin-top: 1rem; }
+    .btn { display: inline-block; padding: 0.55rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #1d4ed8; color: #fff; }
+    .btn-warn { background: #b45309; color: #fff; }
+    .btn-success { background: #059669; color: #fff; }
+    .hidden { display: none; }
+    .error-type { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin: 0.2rem; }
+    .err-sep { background: #fee2e2; color: #b91c1c; }
+    .err-head { background: #fef3c7; color: #92400e; }
+    .err-date { background: #e0e7ff; color: #3730a3; }
+    .err-num { background: #fce7f3; color: #9d174d; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.45rem 0.6rem; text-align: left; font-size: 0.85rem; }
+    th { background: #f9fafb; }
+    .ok { color: #059669; font-weight: 600; }
+    .resumo { font-size: 0.9rem; color: #374151; }
+    code { background: #f3f4f6; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Antecipe — Upload de Lote</h1>
+  <p class="resumo">Envie um CSV de notas. Validamos a <strong>estrutura</strong> do arquivo e mostramos um relatório dos erros, com download do CSV contendo apenas as linhas inválidas para correção.</p>
+
+  <div class="card">
+    <input type="file" id="arquivo" accept=".csv,text/csv" />
+    <p class="resumo" style="margin-top:0.5rem">Separador <code>;</code> · decimal <code>,</code> · datas <code>dd/mm/aaaa</code> · UTF-8</p>
+  </div>
+
+  <!-- Relatório de erros -->
+  <div class="card hidden" id="card-erros">
+    <h2 style="font-size:1.1rem">Relatório de erros estruturais</h2>
+    <div id="resumo-erros"></div>
+    <div id="tabela-erros"></div>
+    <button class="btn btn-warn" id="btn-download" style="margin-top:0.75rem">⬇ Baixar CSV dos registros com erro</button>
+  </div>
+
+  <!-- Sucesso -->
+  <div class="card hidden" id="card-sucesso">
+    <h2 style="font-size:1.1rem" class="ok">✓ Estrutura do arquivo validada</h2>
+    <p class="resumo">Nenhum erro estrutural encontrado. O arquivo está pronto para envio ao processamento das regras de negócio.</p>
+  </div>
+
+  <script type="module">
+    import { analisarArquivoCsv } from './utils/error_report.js';
+
+    const input = document.getElementById('arquivo');
+    const cardErros = document.getElementById('card-erros');
+    const cardSucesso = document.getElementById('card-sucesso');
+    const btnDownload = document.getElementById('btn-download');
+    let relatorioAtual = null;
+
+    const cores = {
+      ERR_CSV_SEPARATOR: 'err-sep',
+      ERR_CSV_HEADER_MISSING: 'err-head',
+      ERR_CSV_DATE_FORMAT: 'err-date',
+      ERR_CSV_NUMERIC_FORMAT: 'err-num',
+      ERR_CSV_ENCODING: 'err-sep'
+    };
+
+    input.addEventListener('change', () => {
+      const arquivo = input.files[0];
+      if (!arquivo) return;
+
+      analisarArquivoCsv(arquivo, (resultado) => {
+        cardErros.classList.add('hidden');
+        cardSucesso.classList.add('hidden');
+
+        if (!resultado.sucesso) {
+          relatorioAtual = resultado.relatorio;
+          mostrarRelatorio(resultado.resumo);
+          cardErros.classList.remove('hidden');
+        } else {
+          cardSucesso.classList.remove('hidden');
+        }
+      });
+    });
+
+    function mostrarRelatorio(resumo) {
+      const tipos = Object.entries(resumo.por_tipo)
+        .map(([tipo, qtd]) => `<span class="error-type ${cores[tipo] || ''}">${tipo}: ${qtd}</span>`)
+        .join('');
+
+      document.getElementById('resumo-erros').innerHTML =
+        `<p>Encontrados <strong>${resumo.total_erros}</strong> erro(s) em ${resumo.total_linhas} linha(s).</p>${tipos}`;
+
+      const linhas = resumo.erros.map((e) =>
+        `<tr><td>${e.linha}</td><td>${e.tipo}</td><td>${e.mensagem}</td></tr>`
+      ).join('');
+
+      document.getElementById('tabela-erros').innerHTML =
+        `<table><thead><tr><th>Linha</th><th>Tipo</th><th>Mensagem</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    }
+
+    btnDownload.addEventListener('click', () => {
+      if (relatorioAtual) relatorioAtual.baixarCsvErros('erros_lote.csv');
+    });
+  </script>
+</body>
+</html>

@@ -169,7 +169,7 @@ public:
 
     // Processa o lote e aplica regras. Retorna contagem via parâmetros.
     void processar(std::vector<Nota>& notas, long& aprovadas, long& recusadas,
-                   double& total_liquido) {
+                   double& total_liquido, bool checar_integridade = false) {
         // Passo 1: agregar total por fundo e por (fundo, raiz sacado)
         std::unordered_map<std::string, double> fundo_total;
         std::unordered_map<std::string, double> conc; // "fundo|raiz" -> valor
@@ -181,11 +181,27 @@ public:
             conc[n.doc_fundo + "|" + raiz] += n.valor_nominal;
         }
 
-        // Passo 2: avaliar cada nota
+        // Passo 2: avaliar cada nota (integridade + regras de negócio)
         aprovadas = recusadas = 0;
         total_liquido = 0.0;
+        std::unordered_set<std::string> visto_no_lote;
+        visto_no_lote.reserve(notas.size());
         for (auto& n : notas) {
             n.motivos.clear();
+            // INTEGRIDADE (apenas no fluxo real de submissão de lote)
+            if (checar_integridade) {
+                std::string chave = n.nu_documento + "|" + n.doc_cedente;
+                // título já negociado no estoque histórico
+                if (estoque.count(chave)) {
+                    n.motivos.push_back("ERR_STOCK_ALREADY_SOLD");
+                }
+                // duplicado dentro do próprio lote
+                if (visto_no_lote.count(chave)) {
+                    n.motivos.push_back("ERR_BATCH_DUPLICATE");
+                } else {
+                    visto_no_lote.insert(chave);
+                }
+            }
             // TIPO_RECEBIVEL
             if (!cfg.tipos_aceitos.count(n.tipo_recebivel)) {
                 n.motivos.push_back("TIPO_RECEBIVEL");

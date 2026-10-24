@@ -14,10 +14,11 @@ $LOAD_PATH.unshift File.join(ROOT, 'backend', 'lib')
 
 require 'antecipe_core'
 
-# 1. Processa o estoque como lote de entrada
+# 1. Processa o estoque como lote de entrada (SEM checagem de integridade,
+#    pois o gabarito avalia apenas as regras de negócio)
 csv = File.read(File.join(ROOT, 'arquivos', 'estoque_antecipe.csv'))
 t0 = Time.now
-resultado = Antecipe::Motor.processar(csv)
+resultado = Antecipe::Motor.processar(csv, checar_integridade: false)
 t1 = Time.now
 
 # 2. Carrega o gabarito

@@ -145,10 +145,19 @@ Cada nota aprovada recebe o **valor líquido** = valor de face × (1 − taxa de
 
 ### Integridade
 
+No fluxo real de submissão (`checar_integridade: true`), o motor aplica duas checagens adicionais:
+
+| Código | Regra |
+|---|---|
+| `ERR_STOCK_ALREADY_SOLD` | título (`NU_DOCUMENTO|DOC_CEDENTE`) já consta no estoque histórico |
+| `ERR_BATCH_DUPLICATE` | mesma chave aparece mais de uma vez no lote submetido |
+
 - **Hash por chave:** `SHA256(NU_DOCUMENTO|DOC_CEDENTE)` para unicidade
 - **Idempotência:** lotes com mesmo hash não são reprocessados
-- **Estoque histórico:** `arquivos/estoque_antecipe.csv` carregado em memória (base para detecção de títulos já negociados)
+- **Estoque histórico:** `arquivos/estoque_antecipe.csv` carregado em memória (base da detecção de títulos já negociados)
 - **Situação cadastral:** `arquivos/cnpj_situacao_mock.csv` como fonte de verdade (hasheada e consultada pelo motor)
+
+> Nota: o gabarito (`resultado_esperado_100k.json`) avalia apenas as regras de negócio, por isso o teste de regressão usa `checar_integridade: false`.
 
 ### Performance
 

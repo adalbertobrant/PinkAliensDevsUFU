@@ -21,12 +21,13 @@ public:
         motor.carregar_situacao(situacao_path);
     }
 
-    // Processa um lote CSV (conteúdo) e retorna JSON string
-    std::string processar(const std::string& conteudo_csv) {
+    // Processa um lote CSV (conteúdo) e retorna JSON string.
+    // checar_integridade: aplica ERR_STOCK_ALREADY_SOLD e ERR_BATCH_DUPLICATE.
+    std::string processar(const std::string& conteudo_csv, bool checar_integridade = true) {
         auto notas = motor.parse_csv(conteudo_csv);
         long aprovadas = 0, recusadas = 0;
         double total_liquido = 0.0;
-        motor.processar(notas, aprovadas, recusadas, total_liquido);
+        motor.processar(notas, aprovadas, recusadas, total_liquido, checar_integridade);
 
         std::ostringstream out;
         out << "{\"resumo\":{\"aprovadas\":" << aprovadas
@@ -65,5 +66,5 @@ void Init_antecipe_core() {
     Class rb_c = define_class_under<Processador>(rb_m, "Processador")
         .define_constructor(Constructor<Processador>())
         .define_method("configurar", &Processador::configurar)
-        .define_method("processar", &Processador::processar);
+        .define_method("processar", &Processador::processar, Arg("checar_integridade") = true);
 }
