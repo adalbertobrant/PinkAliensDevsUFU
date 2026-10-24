@@ -1,0 +1,25 @@
+# Normaliza fim de linha para LF no repositório (evita problemas Windows/Linux).
+# No checkout no Windows, o Git converte para CRLF automaticamente (core.autocrlf).
+
+# Código-fonte: sempre LF
+*.rb    text eol=lf
+*.cpp   text eol=lf
+*.hpp   text eol=lf
+*.h     text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.md    text eol=lf
+*.rake  text eol=lf
+*.sh    text eol=lf
+
+# Dados CSV: LF (parser é sensível a CRLF)
+*.csv   text eol=lf
+
+# Arquivos binários
+*.so    binary
+*.o     binary
+*.png   binary
+*.jpg   binary
+*.pdf   binary

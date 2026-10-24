@@ -186,6 +186,8 @@ Todos os prompts utilizados estão registrados em ordem cronológica em [`PROMPT
 
 ### Possíveis Erros e Soluções
 
+#### Erros de CSV (estrutura do arquivo)
+
 | Erro | Causa | Solução |
 |---|---|---|
 | `ERR_CSV_SEPARATOR` | Separador incorreto | Usar ponto e vírgula (;) |
@@ -193,6 +195,52 @@ Todos os prompts utilizados estão registrados em ordem cronológica em [`PROMPT
 | `ERR_CSV_DATE_FORMAT` | Formato de data errado | Usar dd/mm/aaaa |
 | `ERR_CSV_HEADER_MISSING` | Cabeçalho ausente/incompleto | Verificar colunas obrigatórias |
 | `ERR_CSV_ENCODING` | Encoding incorreto | Salvar como UTF-8 |
+
+#### Docker no Windows 11
+
+> ⚠️ **Erro comum:**
+> ```
+> docker-compose up --build
+> unable to get image 'postgres:16': error during connect:
+> Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/images/postgres:16/json":
+> open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+> ```
+
+Este erro significa que o **daemon do Docker Desktop não está rodando** — o pipe `dockerDesktopLinuxEngine` (que o Docker usa no Windows) não foi encontrado. Não é problema do projeto, é do Docker Desktop.
+
+**Soluções (na ordem):**
+
+1. **Abra o Docker Desktop** (Iniciar → Docker Desktop). O daemon só existe quando o app está aberto.
+2. **Aguarde o ícone da baleia ficar verde/estável** (não mais "Docker Desktop starting..."). Isso pode levar alguns segundos.
+3. Confirme que está rodando:
+   ```powershell
+   docker version
+   docker ps
+   ```
+4. **Habilite o WSL2** (backend do Docker no Windows). No PowerShell **como Administrador**:
+   ```powershell
+   wsl --install
+   wsl --update
+   ```
+   Depois, no Docker Desktop: **Settings → General → Use the WSL 2 based engine** (marque) e **Settings → Resources → WSL Integration** (ative sua distro).
+5. **Reinicie o Docker Desktop** (ícone da bandeja → Quit Docker Desktop → abra de novo), ou reinicie o serviço:
+   ```powershell
+   Restart-Service com.docker.service
+   ```
+6. Se ainda falhar, verifique se o Docker Desktop está configurado para **Linux containers** (e não Windows containers): bandeja do Docker → **Switch to Linux containers**.
+
+> 💡 **Dica:** no Windows, prefira o comando novo `docker compose` (com espaço) em vez de `docker-compose` (hífen). Ambos funcionam, mas `docker compose` é o formato atual do Compose v2:
+> ```powershell
+> docker compose up --build
+> ```
+
+#### Outros erros de banco
+
+| Erro | Causa | Solução |
+|---|---|---|
+| `connection refused` no `rails db:migrate` | PostgreSQL não está rodando | Subir o serviço `db` com `docker compose up -d db` |
+| `PG::ConnectionBad` | Senha/credenciais erradas | Conferir `POSTGRES_PASSWORD` no `.env` |
+| `Couldn't create database` | Banco não existe | Rodar `rails db:create` antes de `db:migrate` |
 
 ### Abrir Issues
 
