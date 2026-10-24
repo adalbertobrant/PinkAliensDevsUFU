@@ -1,0 +1,1 @@
+# regras do hacktoon
