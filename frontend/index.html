@@ -6,13 +6,13 @@
   <title>Antecipe — Validação de Lote de Recebíveis</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1f2937; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1f2937; }
     h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.1rem; }
     .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; margin-top: 1rem; }
     .btn { display: inline-block; padding: 0.55rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
     .btn-primary { background: #1d4ed8; color: #fff; }
     .btn-warn { background: #b45309; color: #fff; }
-    .btn-success { background: #059669; color: #fff; }
     .hidden { display: none; }
     .error-type { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin: 0.2rem; }
     .err-sep { background: #fee2e2; color: #b91c1c; }
@@ -25,38 +25,62 @@
     .ok { color: #059669; font-weight: 600; }
     .resumo { font-size: 0.9rem; color: #374151; }
     code { background: #f3f4f6; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .badge-aprovada { background: #d1fae5; color: #065f46; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-recusada { background: #fee2e2; color: #b91c1c; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .totalizadores { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .total { flex: 1; min-width: 150px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.9rem; text-align: center; }
+    .total .valor { font-size: 1.4rem; font-weight: 700; }
+    .motivo { color: #b91c1c; font-size: 0.8rem; }
+    .spinner { display: inline-block; width: 1em; height: 1em; border: 2px solid #d1d5db; border-top-color: #1d4ed8; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <h1>Antecipe — Upload de Lote</h1>
-  <p class="resumo">Envie um CSV de notas. Validamos a <strong>estrutura</strong> do arquivo e mostramos um relatório dos erros, com download do CSV contendo apenas as linhas inválidas para correção.</p>
+  <h1>Antecipe — Upload de Lote de Recebíveis</h1>
+  <p class="resumo">
+    Envie um CSV de notas. Validamos a <strong>estrutura</strong> (com relatório e download dos erros) e,
+    se estiver correta, processamos as <strong>regras de negócio</strong> no backend, retornando
+    aprovadas/recusadas e o valor a receber.
+  </p>
 
   <div class="card">
-    <input type="file" id="arquivo" accept=".csv,text/csv" />
-    <p class="resumo" style="margin-top:0.5rem">Separador <code>;</code> · decimal <code>,</code> · datas <code>dd/mm/aaaa</code> · UTF-8</p>
+    <label for="arquivo" style="font-weight:600">Arquivo CSV</label><br/>
+    <input type="file" id="arquivo" accept=".csv,text/csv" style="margin-top:0.4rem" />
+    <p class="resumo" style="margin-top:0.5rem">
+      Separador <code>;</code> · decimal <code>,</code> · datas <code>dd/mm/aaaa</code> · UTF-8
+    </p>
+    <div class="resumo" style="margin-top:0.5rem">
+      API: <input type="text" id="api-url" value="http://localhost:3000" style="width:260px" />
+    </div>
   </div>
 
-  <!-- Relatório de erros -->
+  <!-- Relatório de erros estruturais -->
   <div class="card hidden" id="card-erros">
-    <h2 style="font-size:1.1rem">Relatório de erros estruturais</h2>
+    <h2>Relatório de erros estruturais</h2>
     <div id="resumo-erros"></div>
     <div id="tabela-erros"></div>
     <button class="btn btn-warn" id="btn-download" style="margin-top:0.75rem">⬇ Baixar CSV dos registros com erro</button>
   </div>
 
-  <!-- Sucesso -->
-  <div class="card hidden" id="card-sucesso">
-    <h2 style="font-size:1.1rem" class="ok">✓ Estrutura do arquivo validada</h2>
-    <p class="resumo">Nenhum erro estrutural encontrado. O arquivo está pronto para envio ao processamento das regras de negócio.</p>
+  <!-- Resultados das regras de negócio -->
+  <div class="card hidden" id="card-resultados">
+    <h2>Resultado do processamento</h2>
+    <div class="totalizadores" id="totalizadores"></div>
+    <div id="tabela-resultados"></div>
   </div>
+
+  <!-- Status / erros -->
+  <div class="card hidden" id="card-status"></div>
 
   <script type="module">
     import { analisarArquivoCsv } from './utils/error_report.js';
 
     const input = document.getElementById('arquivo');
     const cardErros = document.getElementById('card-erros');
-    const cardSucesso = document.getElementById('card-sucesso');
+    const cardResultados = document.getElementById('card-resultados');
+    const cardStatus = document.getElementById('card-status');
     const btnDownload = document.getElementById('btn-download');
+    const apiUrlInput = document.getElementById('api-url');
     let relatorioAtual = null;
 
     const cores = {
@@ -71,21 +95,63 @@
       const arquivo = input.files[0];
       if (!arquivo) return;
 
-      analisarArquivoCsv(arquivo, (resultado) => {
-        cardErros.classList.add('hidden');
-        cardSucesso.classList.add('hidden');
+      cardErros.classList.add('hidden');
+      cardResultados.classList.add('hidden');
+      cardStatus.classList.add('hidden');
+      mostrarStatus('⏳ Validando estrutura do arquivo...', 'info');
 
+      analisarArquivoCsv(arquivo, (resultado) => {
         if (!resultado.sucesso) {
+          // Erro estrutural -> relatório + download
           relatorioAtual = resultado.relatorio;
-          mostrarRelatorio(resultado.resumo);
+          mostrarRelatorioErros(resultado.resumo);
           cardErros.classList.remove('hidden');
+          cardStatus.classList.add('hidden');
         } else {
-          cardSucesso.classList.remove('hidden');
+          // Estrutura OK -> envia ao backend para as regras de negócio
+          enviarParaBackend(resultado);
         }
       });
     });
 
-    function mostrarRelatorio(resumo) {
+    async function enviarParaBackend(resultado) {
+      const conteudo = resultado.relatorio ? resultado.relatorio.texto : '';
+      if (!conteudo) { mostrarStatus('❌ Conteúdo do arquivo não disponível.', 'erro'); return; }
+
+      const baseUrl = apiUrlInput.value.replace(/\/$/, '');
+      mostrarStatus('<span class="spinner"></span> Processando regras de negócio no backend...', 'info');
+
+      try {
+        const resp = await fetch(`${baseUrl}/api/v1/lotes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome_arquivo: 'lote.csv', conteudo })
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          const msg = err.erro?.mensagem || `Erro ${resp.status}`;
+          mostrarStatus(`❌ ${msg}`, 'erro');
+          cardStatus.classList.remove('hidden');
+          return;
+        }
+
+        const dados = await resp.json();
+        cardStatus.classList.add('hidden');
+        mostrarResultados(dados);
+      } catch (e) {
+        mostrarStatus(
+          `❌ Não foi possível conectar na API (${baseUrl}). Verifique se o backend está rodando: ` +
+          `<code>bundle exec rails server</code> ou <code>docker compose up</code>. Erro: ${e.message}`, 'erro');
+        cardStatus.classList.remove('hidden');
+      }
+    }
+
+    function mostrarStatus(html, tipo) {
+      cardStatus.innerHTML = `<p class="resumo">${html}</p>`;
+    }
+
+    function mostrarRelatorioErros(resumo) {
       const tipos = Object.entries(resumo.por_tipo)
         .map(([tipo, qtd]) => `<span class="error-type ${cores[tipo] || ''}">${tipo}: ${qtd}</span>`)
         .join('');
@@ -99,6 +165,47 @@
 
       document.getElementById('tabela-erros').innerHTML =
         `<table><thead><tr><th>Linha</th><th>Tipo</th><th>Mensagem</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    }
+
+    function mostrarResultados(dados) {
+      const r = dados.resumo || {};
+      const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('totalizadores').innerHTML = `
+        <div class="total"><div class="valor">${r.aprovadas ?? 0}</div><div class="resumo">Aprovadas</div></div>
+        <div class="total"><div class="valor">${r.recusadas ?? 0}</div><div class="resumo">Recusadas</div></div>
+        <div class="total"><div class="valor">${r.total_notas ?? 0}</div><div class="resumo">Total de notas</div></div>
+        <div class="total" style="background:#ecfdf5"><div class="valor" style="color:#065f46">R$ ${fmt(r.total_liquido)}</div><div class="resumo">Total a receber</div></div>
+      `;
+
+      const notas = dados.notas || [];
+      const linhas = notas.map((n) => {
+        const aprovada = n.aprovada;
+        const badge = aprovada
+          ? '<span class="badge-aprovada">Aprovada</span>'
+          : '<span class="badge-recusada">Recusada</span>';
+        const motivos = (n.motivos || []).join(', ');
+        const liquido = aprovada ? `R$ ${fmt(n.valor_liquido)}` : '—';
+        return `<tr>
+          <td>${n.nu_documento}</td>
+          <td>${n.nome_sacado || ''}</td>
+          <td>${n.prazo_dias ?? ''} dias</td>
+          <td>R$ ${fmt(n.valor_nominal)}</td>
+          <td>${liquido}</td>
+          <td>${badge}</td>
+          <td class="motivo">${aprovada ? '' : motivos}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('tabela-resultados').innerHTML = `
+        <table>
+          <thead><tr>
+            <th>NF</th><th>Sacado</th><th>Prazo</th><th>Valor nominal</th><th>Valor líquido</th><th>Status</th><th>Motivo da recusa</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>`;
+
+      cardResultados.classList.remove('hidden');
     }
 
     btnDownload.addEventListener('click', () => {
