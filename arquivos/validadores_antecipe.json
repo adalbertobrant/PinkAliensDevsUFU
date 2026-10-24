@@ -1,35 +1,50 @@
 [
   {
+    "codigo": "TIPO_RECEBIVEL",
+    "ativo": true,
+    "parametros": {
+      "tipos_aceitos": ["Duplicata", "Duplicata de Serviço"],
+      "descricao": "Tipos de recebível elegíveis"
+    }
+  },
+  {
     "codigo": "PRAZO_MAXIMO",
     "ativo": true,
     "parametros": {
-      "limite_dias": 60,
-      "descricao": "Prazo máximo de vencimento em dias"
+      "limite_dias": 180,
+      "descricao": "Prazo máximo do título (vencimento - aquisição) em dias"
     }
   },
   {
     "codigo": "VALOR_MINIMO",
     "ativo": true,
     "parametros": {
-      "limite_minimo": 1000.00,
-      "descricao": "Valor mínimo da nota"
+      "limite_minimo": 100.00,
+      "descricao": "Valor nominal mínimo da nota"
     }
   },
   {
-    "codigo": "CONCENTRACAO_SACADO",
+    "codigo": "CONCENTRACAO_MAXIMA_SACADO",
     "ativo": true,
     "parametros": {
-      "limite_percentual": 20,
-      "limite_valor": 500000.00,
-      "descricao": "Concentração máxima por sacado"
+      "limite_percentual": 10,
+      "descricao": "Concentração máxima (%) de um sacado (raiz CNPJ) no fundo"
     }
   },
   {
-    "codigo": "SITUACAO_CADASTRAL",
+    "codigo": "SITUACAO_CADASTRAL_SACADO",
     "ativo": true,
     "parametros": {
-      "verificar_ativo": true,
-      "descricao": "Verificação de regularidade cadastral"
+      "situacoes_irregulares": ["BAIXADA", "INAPTA", "SUSPENSA"],
+      "descricao": "Verificação de regularidade cadastral do sacado"
+    }
+  },
+  {
+    "codigo": "TAXA_DESCONTO",
+    "ativo": true,
+    "parametros": {
+      "taxa": 0.02,
+      "descricao": "Taxa de desconto simples aplicada sobre o valor de face"
     }
   }
 ]
