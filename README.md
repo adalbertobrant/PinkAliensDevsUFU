@@ -103,6 +103,28 @@ rails db:create db:migrate
 rails server
 ```
 
+#### Sem Docker (Windows 11)
+
+Use o **script de setup automático**, que verifica o que está instalado, instala o que faltar (com sua permissão), pede as credenciais do PostgreSQL e configura tudo:
+
+```powershell
+# No PowerShell, dentro da pasta do projeto:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup_windows.ps1
+```
+
+O script executa, em ordem:
+1. Verifica Ruby, PostgreSQL, Node, Git e build tools (MSYS2/g++/make)
+2. Instala o que estiver faltando via `winget` (perguntando antes)
+3. Pede usuário e senha do PostgreSQL
+4. Gera o `backend/.env` com suas credenciais (nunca commitado)
+5. `bundle install`
+6. Compila a extensão C++ (se tiver build tools)
+7. `rails db:create db:migrate`
+8. Verificação final
+
+> 💡 Se não quiser usar o script, siga o passo a passo **"Sem Docker (Linux)"** acima — funciona igual no Windows, bastando usar o PowerShell e instalar o Ruby via [RubyInstaller](https://rubyinstaller.org/) (com DevKit/MSYS2) e o PostgreSQL nativo para Windows.
+
 ### API Endpoints
 
 - `GET  /api/v1/health` — health check
