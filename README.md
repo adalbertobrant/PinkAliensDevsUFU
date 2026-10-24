@@ -4,7 +4,13 @@
 
 ### Integrantes
 
+- [Hemilinei Talita Dal Santo](https://github.com/Hemi-DalSanto)
+
+- [Jailce Fernanda](https://github.com/jailce)
+
 - [Adalberto Brant](https://github.com/adalbertobrant)
+
+
 
 ### Sobre o Desafio
 
