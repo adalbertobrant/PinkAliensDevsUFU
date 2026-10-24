@@ -192,6 +192,22 @@ No fluxo real de submissão (`checar_integridade: true`), o motor aplica duas ch
 
 > Nota: o gabarito (`resultado_esperado_100k.json`) avalia apenas as regras de negócio, por isso o teste de regressão usa `checar_integridade: false`.
 
+### Importar dados no banco (rake tasks)
+
+O motor C++ lê os dados direto dos arquivos em memória (rápido). Para persistir/consultar no PostgreSQL, use as tarefas:
+
+```bash
+cd backend
+
+# Situação cadastral (3041 registros — rápido)
+rails antecipe:import_cnpj_situacao
+
+# Estoque histórico (100 mil linhas — pode demorar alguns minutos)
+rails antecipe:import_estoque
+```
+
+Os CNPJs são normalizados (removida a pontuação) e armazenados com hash `SHA256` na tabela `situacao_cadastrais`; o estoque vai para `estoques` com `hash_chave = SHA256(NU_DOCUMENTO|DOC_CEDENTE)`.
+
 ### Performance
 
 O motor C++ processa **100.554 linhas em ~0,3s** (bem abaixo do requisito de 1 minuto), usando `unordered_map`/`unordered_set` para lookups O(1) e processamento em dois passos (agregação + avaliação).

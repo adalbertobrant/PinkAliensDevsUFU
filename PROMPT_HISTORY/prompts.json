@@ -55,8 +55,48 @@
     "descricao": "Implementacao completa do motor de regras em C++ (cpp_core/engine.hpp) com 4 regras 100% corretas, extensao Rice (backend/ext/antecipe_core) e integracao Rails (ProcessadorLoteService + LotesController). Performance 0.3s para 100k linhas",
     "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
     "agente_responsavel": "opencode-agent",
-    "sha_commit": "pendente",
+    "sha_commit": "4eaff36",
     "avaliacao_custo": {"moeda": "USD", "valor": 0.04},
     "quantidade_tokens": {"input": 30000, "output": 8000}
+  },
+  {
+    "id": 7,
+    "timestamp": "2026-10-24T02:00:00Z",
+    "descricao": "Validacao de integridade (ERR_STOCK_ALREADY_SOLD e ERR_BATCH_DUPLICATE) no motor C++ com flag checar_integridade. Relatorio de erros estruturais CSV no frontend (error_report.js) com download dos registros invalidos",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent",
+    "sha_commit": "27ab771",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.03},
+    "quantidade_tokens": {"input": 25000, "output": 6000}
+  },
+  {
+    "id": 8,
+    "timestamp": "2026-10-24T02:20:00Z",
+    "descricao": "Scripts de setup Windows 11 (setup_windows.ps1 e setup_docker_windows.ps1) que verificam pre-requisitos, pedem credenciais e gravam no .env. Troubleshooting de Docker Desktop e ActiveRecord::DatabaseConnectionError no README",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent",
+    "sha_commit": "9115490",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.02},
+    "quantidade_tokens": {"input": 30000, "output": 9000}
+  },
+  {
+    "id": 9,
+    "timestamp": "2026-10-24T02:40:00Z",
+    "descricao": "Correcao de EOF residual (heredoc) que quebrava o parse do Dockerfile. Integracao do frontend a API (POST /api/v1/lotes) e correcao do CORS",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent",
+    "sha_commit": "02e7674",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.02},
+    "quantidade_tokens": {"input": 28000, "output": 7000}
+  },
+  {
+    "id": 10,
+    "timestamp": "2026-10-24T03:10:00Z",
+    "descricao": "Teste de Docker neste PC: identificado que NordVPN (nordlynx) quebrava o docker-proxy. Correcao de bugs de persistencia: indice duplicado na migration, inflexao pt-BR (recebivel->recebiveis), autoload do Antecipe::Motor via initializer. Validado migracoes, POST /api/v1/lotes persistindo, idempotencia e import cnpj_situacao",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent",
+    "sha_commit": "2ef1e5f",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.05},
+    "quantidade_tokens": {"input": 40000, "output": 10000}
   }
 ]
