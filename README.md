@@ -63,15 +63,6 @@ PinkAliensDevsUFU/
 
 #### Com Docker (Recomendado)
 
-**Windows 11 — use o script automático** (verifica o Docker, pede as credenciais, grava no `.env` e sobe tudo):
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\scripts\setup_docker_windows.ps1
-```
-
-> ⚠️ A senha do PostgreSQL é lida **somente na primeira subida** do banco. Se trocar a senha depois, rode antes `docker compose down -v` para recriar o volume.
-
 **Linux/macOS — manual:**
 
 ```bash
@@ -119,28 +110,6 @@ rails db:create db:migrate
 # Iniciar servidor
 rails server
 ```
-
-#### Sem Docker (Windows 11)
-
-Use o **script de setup automático**, que verifica o que está instalado, instala o que faltar (com sua permissão), pede as credenciais do PostgreSQL e configura tudo:
-
-```powershell
-# No PowerShell, dentro da pasta do projeto:
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\scripts\setup_windows.ps1
-```
-
-O script executa, em ordem:
-1. Verifica Ruby, PostgreSQL, Node, Git e build tools (MSYS2/g++/make)
-2. Instala o que estiver faltando via `winget` (perguntando antes)
-3. Pede usuário e senha do PostgreSQL
-4. Gera o `backend/.env` com suas credenciais (nunca commitado)
-5. `bundle install`
-6. Compila a extensão C++ (se tiver build tools)
-7. `rails db:create db:migrate`
-8. Verificação final
-
-> 💡 Se não quiser usar o script, siga o passo a passo **"Sem Docker (Linux)"** acima — funciona igual no Windows, bastando usar o PowerShell e instalar o Ruby via [RubyInstaller](https://rubyinstaller.org/) (com DevKit/MSYS2) e o PostgreSQL nativo para Windows.
 
 ### Como Usar (via web / navegador)
 
@@ -283,97 +252,6 @@ Todos os prompts utilizados estão registrados em ordem cronológica em [`PROMPT
 | `ERR_CSV_HEADER_MISSING` | Cabeçalho ausente/incompleto | Verificar colunas obrigatórias |
 | `ERR_CSV_ENCODING` | Encoding incorreto | Salvar como UTF-8 |
 
-#### Docker no Windows 11
-
-> ⚠️ **Erro comum:**
-> ```
-> docker-compose up --build
-> unable to get image 'postgres:16': error during connect:
-> Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/images/postgres:16/json":
-> open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
-> ```
-
-Este erro significa que o **daemon do Docker Desktop não está rodando** — o pipe `dockerDesktopLinuxEngine` (que o Docker usa no Windows) não foi encontrado. Não é problema do projeto, é do Docker Desktop.
-
-**Soluções (na ordem):**
-
-1. **Abra o Docker Desktop** (Iniciar → Docker Desktop). O daemon só existe quando o app está aberto.
-2. **Aguarde o ícone da baleia ficar verde/estável** (não mais "Docker Desktop starting..."). Isso pode levar alguns segundos.
-3. Confirme que está rodando:
-   ```powershell
-   docker version
-   docker ps
-   ```
-4. **Habilite o WSL2** (backend do Docker no Windows). No PowerShell **como Administrador**:
-   ```powershell
-   wsl --install
-   wsl --update
-   ```
-   Depois, no Docker Desktop: **Settings → General → Use the WSL 2 based engine** (marque) e **Settings → Resources → WSL Integration** (ative sua distro).
-5. **Reinicie o Docker Desktop** (ícone da bandeja → Quit Docker Desktop → abra de novo), ou reinicie o serviço:
-   ```powershell
-   Restart-Service com.docker.service
-   ```
-6. Se ainda falhar, verifique se o Docker Desktop está configurado para **Linux containers** (e não Windows containers): bandeja do Docker → **Switch to Linux containers**.
-
-> 💡 **Dica:** no Windows, prefira o comando novo `docker compose` (com espaço) em vez de `docker-compose` (hífen). Ambos funcionam, mas `docker compose` é o formato atual do Compose v2:
-> ```powershell
-> docker compose up --build
-> ```
-
-> ⚠️ **VPN ativa pode quebrar a rede do Docker.** VPNs como **NordVPN** (WireGuard/`nordlynx`) costumam bloquear o encaminhamento do `docker-proxy`, fazendo o Docker "aceitar TCP mas não responder" (ex.: `docker compose up` sobe, mas `rails db:migrate`/`localhost:5432` não conecta). Se estiver com VPN ligada:
-> - **Desconecte a VPN** e reinicie o Docker Desktop (ou `sudo systemctl restart docker` no Linux), ou
-> - Adicione a rede do Docker à lista de exceções da VPN (allowlist da sub-rede `172.16.0.0/12` / `172.17.0.0/16`).
-
-#### `ActiveRecord::DatabaseConnectionError` (Rails não conecta no banco)
-
-> ⚠️ **Erro:**
-> ```
-> ActiveRecord::DatabaseConnectionError
-> There is an issue connecting with your hostname: 127.0.0.1.
-> Please check your database configuration and ensure there is a valid
-> connection to your database.
-> ```
-
-Este erro aparece quando o Rails **não consegue conectar no PostgreSQL** em `127.0.0.1:5432`. Na grande maioria das vezes, é o **mesmo problema do Docker Desktop** acima: o banco não está rodando. Ele costuma surgir quando você roda o Rails **fora** do Docker (`rails db:migrate`, `rails server`) sem antes subir o banco.
-
-**Causas mais comuns (na ordem):**
-
-1. **PostgreSQL não está rodando** — o contêiner `db` não foi iniciado.
-2. **Docker Desktop está fechado** — então o contêiner `db` não consegue subir.
-3. **Rodou `rails db:migrate` sem `rails db:create` antes** (o banco ainda não existe).
-
-**Solução passo a passo (Windows 11):**
-
-```powershell
-# 1. Abra o Docker Desktop e aguarde a baleia ficar verde.
-
-# 2. Suba SOMENTE o banco de dados:
-docker compose up -d db
-
-# 3. Aguarde alguns segundos até o PostgreSQL aceitar conexões.
-#    (pode confirmar repetindo até aparecer o contêiner "Up"):
-docker ps
-
-# 4. Crie o banco e rode as migrações:
-cd backend
-rails db:create db:migrate
-```
-
-> 💡 **Alternativa mais simples:** suba tudo de uma vez com `docker compose up --build` (sobe banco + backend juntos). Nesse caso, **não** rode `rails db:migrate` na sua máquina — as migrações devem rodar *dentro* do contêiner:
-> ```powershell
-> docker compose exec backend rails db:create db:migrate
-> ```
-
-> ⚠️ **Se preferir rodar o Rails localmente (sem Docker),** você precisa de um PostgreSQL instalado e rodando na própria máquina Windows (ex.: instalar o PostgreSQL 16 nativo e ajustar `POSTGRES_HOST`/`POSTGRES_PASSWORD` no `backend/.env`). O caminho com Docker é o recomendado.
-
-#### Outros erros de banco
-
-| Erro | Causa | Solução |
-|---|---|---|
-| `connection refused` no `rails db:migrate` | PostgreSQL não está rodando | Subir o serviço `db` com `docker compose up -d db` |
-| `PG::ConnectionBad` | Senha/credenciais erradas | Conferir `POSTGRES_PASSWORD` no `.env` |
-| `Couldn't create database` | Banco não existe | Rodar `rails db:create` antes de `db:migrate` |
 
 ### Abrir Issues
 
