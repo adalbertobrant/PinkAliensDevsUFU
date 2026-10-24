@@ -412,11 +412,15 @@
     }
 
     const CATEGORIAS = {
-      'PRAZO_MAXIMO': { nome: 'Prazo acima do limite', desc: 'vencimento acima de 180 dias' },
-      'SITUACAO_CADASTRAL_SACADO': { nome: 'Situação cadastral do CNPJ', desc: 'CNPJ irregular na Receita Federal' },
+      'CNPJ_SACADO_VALIDO': { nome: 'CNPJ inválido', desc: 'dígitos verificadores do CNPJ do sacado' },
+      'SITUACAO_CADASTRAL_SACADO': { nome: 'Situação cadastral do CNPJ', desc: 'CNPJ não está ATIVA na Receita Federal' },
+      'TIPO_RECEBIVEL': { nome: 'Tipo de recebível', desc: 'apenas Duplicata e Duplicata de Serviço' },
       'VALOR_MINIMO': { nome: 'Valor abaixo do mínimo', desc: 'abaixo do piso de R$ 100,00' },
-      'TIPO_RECEBIVEL': { nome: 'Tipo de recebível', desc: 'Cheque, CCB ou Nota Comercial' },
-      'CONCENTRACAO_MAXIMA_SACADO': { nome: 'Concentração do sacado', desc: 'acima de 10% do fundo' },
+      'NAO_VENCIDA': { nome: 'Nota vencida', desc: 'vencimento anterior à data base (22/10/2026)' },
+      'PRAZO_MAXIMO': { nome: 'Prazo acima do limite', desc: 'prazo do título acima de 180 dias' },
+      'PRAZO_MINIMO': { nome: 'Prazo abaixo do mínimo', desc: 'vencimento em menos de 30 dias' },
+      'CONCENTRACAO_MAXIMA_SACADO': { nome: 'Concentração do sacado', desc: 'acima de 10% do fundo (raiz CNPJ)' },
+      'CONCENTRACAO_MAXIMA_CEDENTE': { nome: 'Concentração do cedente', desc: 'acima de 8% do fundo' },
       'ERR_STOCK_ALREADY_SOLD': { nome: 'Título já negociado', desc: 'já adquirido anteriormente' },
       'ERR_BATCH_DUPLICATE': { nome: 'Duplicidade', desc: 'repetido no próprio lote' },
     };
@@ -522,7 +526,7 @@
     }
 
     function situacaoBadge(n) {
-      // Situação cadastral: deriva de motivos + validação do CNPJ
+      // Situação cadastral: inválido (dígitos) ou irregular (não ATIVA)
       const cnpj = (n.doc_sacado || '').replace(/\D/g, '');
       if (cnpj.length === 14 && !cnpjValido(cnpj)) {
         return '<span class="inline-block situacao-invalido rounded px-1.5 py-0.5 text-[10px] font-bold">Inválido</span>';
@@ -559,11 +563,15 @@
 
     function detalheMotivo(n, m) {
       switch (m) {
-        case 'PRAZO_MAXIMO': return `vence em ${n.prazo_dias} dias; o limite configurado é 180 dias.`;
-        case 'VALOR_MINIMO': return `valor de R$ ${fmt(n.valor_nominal)}; o piso é R$ 100,00.`;
-        case 'SITUACAO_CADASTRAL_SACADO': return `o CNPJ ${fmtCnpj(n.doc_sacado)} encontra-se irregular; o fundo exige situação 'Ativo'.`;
+        case 'CNPJ_SACADO_VALIDO': return `o CNPJ ${fmtCnpj(n.doc_sacado)} possui dígito verificador inválido.`;
+        case 'SITUACAO_CADASTRAL_SACADO': return `o CNPJ ${fmtCnpj(n.doc_sacado)} não está 'ATIVA' na Receita Federal; o fundo exige situação 'ATIVA'.`;
         case 'TIPO_RECEBIVEL': return `tipo '${n.tipo_recebivel}' não é elegível (apenas Duplicata e Duplicata de Serviço).`;
-        case 'CONCENTRACAO_MAXIMA_SACADO': return `o sacado ultrapassou o limite de concentração do fundo.`;
+        case 'VALOR_MINIMO': return `valor de R$ ${fmt(n.valor_nominal)}; o piso é R$ 100,00.`;
+        case 'NAO_VENCIDA': return `a nota vence em ${n.data_vencimento || '—'}, anterior à data base (22/10/2026).`;
+        case 'PRAZO_MAXIMO': return `prazo do título de ${n.prazo_dias} dias; o limite configurado é 180 dias.`;
+        case 'PRAZO_MINIMO': return `vencimento em menos de 30 dias a partir da data base.`;
+        case 'CONCENTRACAO_MAXIMA_SACADO': return `o sacado ultrapassou o limite de 10% do fundo (raiz CNPJ).`;
+        case 'CONCENTRACAO_MAXIMA_CEDENTE': return `o cedente ultrapassou o limite de 8% do fundo.`;
         case 'ERR_STOCK_ALREADY_SOLD': return `esta nota já foi adquirida anteriormente.`;
         case 'ERR_BATCH_DUPLICATE': return `este documento aparece mais de uma vez no lote.`;
         default: return '';
@@ -615,11 +623,14 @@
       const valor = parseFloat(valorStr);
       if (isNaN(valor) || valor <= 0) { alert('Valor nominal inválido.'); return; }
 
-      // Revalida as regras de negócio no cliente
+      const diasAteVencer = diasEntre('22/10/2026', vencimento);
+
+      // Revalida regras client-side (parcial: situação e concentração exigem o backend)
       const novosMotivos = [];
+      if (!cnpjValido(cnpj)) novosMotivos.push('CNPJ_SACADO_VALIDO');
       if (!['Duplicata', 'Duplicata de Serviço'].includes(n.tipo_recebivel)) novosMotivos.push('TIPO_RECEBIVEL');
-      if (n.prazo_dias > 180) novosMotivos.push('PRAZO_MAXIMO');
       if (valor < 100) novosMotivos.push('VALOR_MINIMO');
+      if (diasAteVencer < 0) novosMotivos.push('NAO_VENCIDA');
 
       // Atualiza a nota
       n.nome_sacado = sacado;
@@ -629,13 +640,22 @@
       n.motivos = novosMotivos;
       n.aprovada = novosMotivos.length === 0;
       n.corrigida = true;
-      if (n.aprovada) n.valor_liquido = valor * 0.98; // taxa de desconto de 2%
+      // Precificação: desconto simples mensal (2% a.m., base 30 dias)
+      n.valor_liquido = (n.aprovada && diasAteVencer >= 0)
+        ? valor * (1 - 0.02 * (diasAteVencer / 30))
+        : 0;
 
       editandoNf = null;
       recalcularTotais();
       renderDiagnostico();
       renderFiltros();
       renderTabela();
+    }
+
+    function diasEntre(de, ate) {
+      const [dd, dm, da] = de.split('/').map(Number);
+      const [ad, am, aa] = ate.split('/').map(Number);
+      return Math.round((new Date(aa, am - 1, ad) - new Date(da, dm - 1, dd)) / (1000 * 60 * 60 * 24));
     }
 
     function recalcularTotais() {

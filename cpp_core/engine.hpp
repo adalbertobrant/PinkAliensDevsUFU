@@ -361,9 +361,9 @@ public:
                 n.motivos.push_back("PRAZO_MAXIMO");
             }
 
-            // PRAZO_MINIMO (inativo por padrão)
+            // PRAZO_MINIMO (inativo por padrão) — prazo entre data base e vencimento
             if (cfg.validadores_ativos.count("PRAZO_MINIMO") &&
-                n.prazo_dias < cfg.prazo_minimo_dias) {
+                (n.data_vencimento_dias - cfg.data_base_dias) < cfg.prazo_minimo_dias) {
                 n.motivos.push_back("PRAZO_MINIMO");
             }
 
@@ -389,9 +389,10 @@ public:
 
             if (n.motivos.empty()) {
                 aprovadas++;
-                // Precificação: desconto simples proporcional ao prazo
+                // Precificação (desconto simples): PrazoDias = dias entre a data base e o vencimento
+                long dias_ate_vencer = n.data_vencimento_dias - cfg.data_base_dias;
                 double desconto = n.valor_nominal * (cfg.taxa_mensal_percentual / 100.0)
-                                  * ((double)n.prazo_dias / cfg.base_dias);
+                                  * ((double)dias_ate_vencer / cfg.base_dias);
                 n.valor_liquido = n.valor_nominal - desconto;
                 total_liquido += n.valor_liquido;
             } else {
