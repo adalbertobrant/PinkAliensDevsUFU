@@ -1,0 +1,32 @@
+index.html.erb
+
+<div data-controller="antecipe-feedback" class="max-w-4xl mx-auto p-6 space-y-6">
+  <!-- Card de Erro Estrutural de Upload (CSV) -->
+  <div data-antecipe-feedback-target="cardErroEstrutural" class="hidden p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+    <p data-antecipe-feedback-target="mensagemErroEstrutural" class="font-medium text-sm"></p>
+  </div>
+
+  <!-- Tabela de Recebíveis -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-gray-50 text-gray-400 font-semibold text-xs uppercase tracking-wider">
+        <tr>
+          <th class="py-3 px-4">Nota</th>
+          <th class="py-3 px-4">Sacado</th>
+          <th class="py-3 px-4">Vencimento</th>
+          <th class="py-3 px-4">Valor</th>
+          <th class="py-3 px-4 text-right">Status</th>
+        </tr>
+      </thead>
+      <tbody data-antecipe-feedback-target="tabelaCorpo"></tbody>
+    </table>
+  </div>
+
+  <!-- Banner de Justificativa de Recusa (Logo abaixo da tabela) -->
+  <div data-antecipe-feedback-target="bannerRecusa" class="hidden p-4 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-sm">
+    <span data-antecipe-feedback-target="mensagemRecusa" class="font-medium"></span>
+  </div>
+
+  <!-- Card Inferior de Simulação (Fundo Verde Escuro do Protótipo) -->
+  <div data-antecipe-feedback-target="cardSimulacao" class="hidden p-4 bg-[#0a382c] rounded-xl shadow"></div>
+</div>

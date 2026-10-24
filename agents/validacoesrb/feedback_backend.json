@@ -1,0 +1,98 @@
+# app/services/feedback_catalog.rb
+class FeedbackCatalog
+  FEEDBACKS = {
+    # --- SUCESSO ---
+    NOTA_APROVADA: {
+      status: 'Aprovada',
+      tipo: :sucesso,
+      mensagem: ->(_) { 'Elegível para antecipação.' }
+    },
+    LOTE_SUCESSO: {
+      status: 'Processado',
+      tipo: :sucesso,
+      mensagem: ->(d) { "Arquivo #{d[:arquivo]} processado com sucesso. #{d[:total]} notas analisadas." }
+    },
+
+    # --- REGRAS DE NEGÓCIO (validadores_antecipe.json) ---
+    PRAZO_MAXIMO_EXCEDIDO: {
+      status: 'Recusada',
+      tipo: :regra_negocio,
+      mensagem: ->(d) { "NF #{d[:documento]} · Prazo acima do limite: vence em #{d[:dias_real]} dias; o limite configurado é #{d[:limite]}." }
+    },
+    VALOR_MINIMO_NAO_ATINGIDO: {
+      status: 'Recusada',
+      tipo: :regra_negocio,
+      mensagem: ->(d) { "NF #{d[:documento]} · Valor abaixo do mínimo: a nota é de R$ #{d[:valor_real]}; o limite configurado é R$ #{d[:limite]}." }
+    },
+    CONCENTRACAO_SACADO_EXCEDIDA: {
+      status: 'Recusada',
+      tipo: :regra_negocio,
+      mensagem: ->(d) { "NF #{d[:documento]} · Concentração de sacado excedida: o cliente #{d[:sacado]} atingiu o limite de exposição do fundo." }
+    },
+    CADASTRO_IRREGULAR: {
+      status: 'Recusada',
+      tipo: :regra_negocio,
+      mensagem: ->(d) { "NF #{d[:documento]} · Irregularidade cadastral: documento do sacado ou cedente inativo na Receita Federal." }
+    },
+
+    # --- INTEGRIDADE, DUPLICIDADE E ESTOQUE ---
+    TITULO_JA_NEGOCIADO_ESTOQUE: {
+      status: 'Recusada',
+      tipo: :integridade,
+      mensagem: ->(d) { "NF #{d[:documento]} · Título já negociado: esta nota já foi adquirida anteriormente por um fundo em #{d[:data_aquisicao]}." }
+    },
+    TITULO_DUPLICADO_NO_LOTE: {
+      status: 'Recusada',
+      tipo: :integridade,
+      mensagem: ->(d) { "NF #{d[:documento]} · Nota duplicada: este mesmo documento aparece mais de uma vez no arquivo enviado." }
+    },
+    LOTE_JA_PROCESSADO_IDEMPOTENCIA: {
+      status: 'Alerta',
+      tipo: :idempotencia,
+      mensagem: ->(_) { 'Este lote já foi processado anteriormente. Exibindo resultados originais.' }
+    },
+
+    # --- EXCEÇÕES ESTRUTURAIS DO CSV ---
+    CSV_SEPARADOR_INVALIDO: {
+      status: 'Erro',
+      tipo: :estrutura_csv,
+      mensagem: ->(_) { 'Não conseguimos ler seu arquivo: o separador de colunas deve ser ponto e vírgula (;).' }
+    },
+    CSV_VALOR_INVALIDO: {
+      status: 'Erro',
+      tipo: :estrutura_csv,
+      mensagem: ->(d) { "Erro no formato de valor na linha #{d[:linha]}: centavos devem usar vírgula (ex.: 1000,50)." }
+    },
+    CSV_DATA_INVALIDA: {
+      status: 'Erro',
+      tipo: :estrutura_csv,
+      mensagem: ->(d) { "Data inválida na nota #{d[:documento]}: utilize o padrão dia/mês/ano (dd/mm/aaaa)." }
+    },
+    CSV_CABECALHO_INVALIDO: {
+      status: 'Erro',
+      tipo: :estrutura_csv,
+      mensagem: ->(_) { 'Estrutura incompleta: não encontramos as colunas obrigatórias no cabeçalho do arquivo.' }
+    },
+    CSV_ENCODING_INVALIDO: {
+      status: 'Erro',
+      tipo: :estrutura_csv,
+      mensagem: ->(_) { 'Erro de codificação: salve seu arquivo como CSV com codificação UTF-8.' }
+    }
+  }.freeze
+
+  def self.build(codigo, params = {})
+    config = FEEDBACKS[codigo.to_sym] || {
+      status: 'Recusada',
+      tipo: :desconhecido,
+      mensagem: ->(_) { "Regra violada: #{codigo}" }
+    }
+
+    {
+      codigo: codigo.to_s,
+      status: config[:status],
+      tipo: config[:tipo],
+      mensagem: config[:mensagem].call(params),
+      detalhes: params
+    }
+  end
+end
