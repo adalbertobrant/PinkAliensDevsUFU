@@ -19,5 +19,8 @@ module AntecipeApi
     config.load_defaults 8.0
     config.api_only = true
     config.middleware.use Rack::Attack
+
+    # Autoload do diretório lib/ (motor C++ wrapper, serviços, etc.)
+    config.autoload_lib(ignore: %w[assets tasks])
   end
 end

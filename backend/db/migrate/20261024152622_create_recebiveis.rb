@@ -23,6 +23,5 @@ class CreateRecebiveis < ActiveRecord::Migration[8.0]
     add_index :recebiveis, :hash_chave
     add_index :recebiveis, [:nu_documento, :doc_cedente]
     add_index :recebiveis, :status
-    add_index :recebiveis, :lote_id
   end
 end

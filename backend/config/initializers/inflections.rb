@@ -14,3 +14,11 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# Termos em português do domínio (pluralização correta das tabelas)
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular 'recebivel', 'recebiveis'
+  inflect.irregular 'lote', 'lotes'
+  inflect.irregular 'estoque', 'estoques'
+  inflect.irregular 'situacao_cadastral', 'situacao_cadastrais'
+end
