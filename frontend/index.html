@@ -115,7 +115,7 @@
           <input type="text" id="api-url" value="http://localhost:3000" class="flex-1 border border-kp-borda rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-kp-institucional" />
         </div>
 
-        <button id="btn-processar" class="mt-4 w-full bg-kp-institucional hover:bg-kp-profundo text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <button id="btn-processar" disabled class="mt-4 w-full bg-kp-institucional hover:bg-kp-profundo text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           Processar Lote
         </button>
       </div>
@@ -279,7 +279,10 @@
     $('btn-cancelar').addEventListener('click', () => { state.cancelado = true; });
 
     async function processar() {
-      if (!state.arquivo) return;
+      if (!state.arquivo) {
+        alert('Por favor, carregue um arquivo CSV antes de processar o lote.');
+        return;
+      }
       state.cancelado = false;
       state.processando = true;
 
@@ -376,7 +379,7 @@
         }
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        const timeout = setTimeout(() => controller.abort(), 240000); // 240s (4 min) timeout
 
         const resp = await fetch(`${baseUrl}/api/v1/lotes`, {
           method: 'POST',
@@ -413,7 +416,7 @@
         if (e.message === 'cancelado') {
           mostrarEstado('cancelado', 'Envio cancelado pelo usuário.');
         } else if (e.name === 'AbortError') {
-          mostrarEstado('timeout', 'O processamento excedeu o tempo limite (60s).');
+          mostrarEstado('timeout', 'O processamento excedeu o tempo limite (4 min).');
         } else if (e instanceof TypeError) {
           mostrarEstado('erro', `Falha de conexão com a API (${baseUrl}). Verifique se o backend está rodando.`);
         } else {

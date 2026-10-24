@@ -51,19 +51,26 @@ class ProcessadorLoteService
       valor_total_liquido: resultado['resumo']['total_liquido'],
       status: 'concluido'
     )
-    resultado['notas'].each do |n|
-      Recebivel.create!(
-        lote: lote,
+
+    # Inserção em lote (rápida) em vez de N inserts individuais
+    agora = Time.current
+    registros = resultado['notas'].map do |n|
+      {
+        lote_id: lote.id,
         hash_chave: Digest::SHA256.hexdigest("#{n['nu_documento']}|#{n['doc_cedente']}"),
         nu_documento: n['nu_documento'],
         doc_cedente: n['doc_cedente'],
         nome_sacado: n['nome_sacado'],
         valor_nominal: n['valor_nominal'],
         status: n['aprovada'] ? 'aprovada' : 'recusada',
-        motivo_recusa: n['motivos'].join(', '),
-        valor_liquido: n['valor_liquido']
-      )
+        motivo_recusa: (n['motivos'] || []).join(', '),
+        valor_liquido: n['valor_liquido'],
+        created_at: agora,
+        updated_at: agora
+      }
     end
+
+    Recebivel.insert_all(registros) if registros.any?
     lote
   rescue ActiveRecord::ActiveRecordError, PG::Error => e
     # Banco indisponível: retorna lote não persistido (sem quebrar a API)
