@@ -1,50 +1,78 @@
-[
-  {
-    "codigo": "TIPO_RECEBIVEL",
-    "ativo": true,
-    "parametros": {
-      "tipos_aceitos": ["Duplicata", "Duplicata de Serviço"],
-      "descricao": "Tipos de recebível elegíveis"
-    }
+{
+  "fundo": {
+    "nome": "ANTECIPE FIDC",
+    "cnpj": "92.234.400/0001-80"
   },
-  {
-    "codigo": "PRAZO_MAXIMO",
-    "ativo": true,
-    "parametros": {
-      "limite_dias": 180,
-      "descricao": "Prazo máximo do título (vencimento - aquisição) em dias"
+  "validadores": [
+    {
+      "codigo": "CNPJ_SACADO_VALIDO",
+      "ativo": true,
+      "parametros": {}
+    },
+    {
+      "codigo": "SITUACAO_CADASTRAL_SACADO",
+      "ativo": true,
+      "parametros": {
+        "situacoes_aceitas": [
+          "ATIVA"
+        ]
+      }
+    },
+    {
+      "codigo": "TIPO_RECEBIVEL",
+      "ativo": true,
+      "parametros": {
+        "tipos_aceitos": [
+          "Duplicata",
+          "Duplicata de Serviço"
+        ]
+      }
+    },
+    {
+      "codigo": "VALOR_MINIMO",
+      "ativo": true,
+      "parametros": {
+        "valor_minimo": 100.0
+      }
+    },
+    {
+      "codigo": "NAO_VENCIDA",
+      "ativo": true,
+      "parametros": {}
+    },
+    {
+      "codigo": "PRAZO_MAXIMO",
+      "ativo": true,
+      "parametros": {
+        "prazo_maximo_dias": 180
+      }
+    },
+    {
+      "codigo": "CONCENTRACAO_MAXIMA_SACADO",
+      "ativo": true,
+      "parametros": {
+        "percentual_maximo": 10.0,
+        "agrupamento": "RAIZ_CNPJ"
+      }
+    },
+    {
+      "codigo": "PRAZO_MINIMO",
+      "ativo": false,
+      "parametros": {
+        "prazo_minimo_dias": 30
+      }
+    },
+    {
+      "codigo": "CONCENTRACAO_MAXIMA_CEDENTE",
+      "ativo": false,
+      "parametros": {
+        "percentual_maximo": 8.0
+      }
     }
-  },
-  {
-    "codigo": "VALOR_MINIMO",
-    "ativo": true,
-    "parametros": {
-      "limite_minimo": 100.00,
-      "descricao": "Valor nominal mínimo da nota"
-    }
-  },
-  {
-    "codigo": "CONCENTRACAO_MAXIMA_SACADO",
-    "ativo": true,
-    "parametros": {
-      "limite_percentual": 10,
-      "descricao": "Concentração máxima (%) de um sacado (raiz CNPJ) no fundo"
-    }
-  },
-  {
-    "codigo": "SITUACAO_CADASTRAL_SACADO",
-    "ativo": true,
-    "parametros": {
-      "situacoes_irregulares": ["BAIXADA", "INAPTA", "SUSPENSA"],
-      "descricao": "Verificação de regularidade cadastral do sacado"
-    }
-  },
-  {
-    "codigo": "TAXA_DESCONTO",
-    "ativo": true,
-    "parametros": {
-      "taxa": 0.02,
-      "descricao": "Taxa de desconto simples aplicada sobre o valor de face"
-    }
+  ],
+  "precificacao": {
+    "metodo": "DESCONTO_SIMPLES",
+    "taxa_mensal_percentual": 2.0,
+    "base_dias": 30
   }
-]
+}
