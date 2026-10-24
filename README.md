@@ -267,6 +267,10 @@ Este erro significa que o **daemon do Docker Desktop não está rodando** — o 
 > docker compose up --build
 > ```
 
+> ⚠️ **VPN ativa pode quebrar a rede do Docker.** VPNs como **NordVPN** (WireGuard/`nordlynx`) costumam bloquear o encaminhamento do `docker-proxy`, fazendo o Docker "aceitar TCP mas não responder" (ex.: `docker compose up` sobe, mas `rails db:migrate`/`localhost:5432` não conecta). Se estiver com VPN ligada:
+> - **Desconecte a VPN** e reinicie o Docker Desktop (ou `sudo systemctl restart docker` no Linux), ou
+> - Adicione a rede do Docker à lista de exceções da VPN (allowlist da sub-rede `172.16.0.0/12` / `172.17.0.0/16`).
+
 #### `ActiveRecord::DatabaseConnectionError` (Rails não conecta no banco)
 
 > ⚠️ **Erro:**
