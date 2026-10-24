@@ -12,13 +12,19 @@ class ProcessadorLoteService
   end
 
   def executar
-    # Idempotência: se o lote já foi processado, retorna o existente
+    # Idempotência: se o lote já foi processado, re-processa em memória (rápido)
+    # para devolver as notas sem duplicar a persistência.
     lote_existente = Lote.find_by(hash_lote: @hash_lote)
     if lote_existente
+      resultado = Antecipe::Motor.processar(@csv_content)
       return {
         idempotente: true,
         lote: lote_existente,
-        resumo: resumo_de(lote_existente)
+        resumo: resumo_de(lote_existente).merge(
+          total_notas: resultado['notas'].size,
+          valor_bruto: resultado['notas'].sum { |n| n['valor_nominal'] }
+        ),
+        notas: resultado['notas']
       }
     end
 
