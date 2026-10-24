@@ -19,9 +19,10 @@ struct Nota {
     std::string doc_sacado;
     std::string tipo_recebivel;
     std::string doc_fundo;
-    std::string data_vencimento;   // dd/mm/aaaa (original)
+    std::string data_vencimento;     // dd/mm/aaaa (original)
+    long data_vencimento_dias = 0;   // dias desde epoch (para NAO_VENCIDA)
     double valor_nominal = 0.0;
-    long prazo_dias = 0; // vencimento - aquisicao
+    long prazo_dias = 0;             // vencimento - aquisicao
     // resultados
     std::vector<std::string> motivos;
     double valor_liquido = 0.0;
@@ -29,13 +30,17 @@ struct Nota {
 
 struct Config {
     int prazo_maximo_dias = 180;
+    int prazo_minimo_dias = 30;                 // PRAZO_MINIMO (inativo por padrão)
     double valor_minimo = 100.0;
-    double concentracao_percentual = 10.0;
-    double taxa_desconto = 0.02;
+    double concentracao_percentual = 10.0;      // CONCENTRACAO_MAXIMA_SACADO
+    double concentracao_cedente_percentual = 8.0; // CONCENTRACAO_MAXIMA_CEDENTE (inativo)
+    double taxa_mensal_percentual = 2.0;        // precificacao
+    int base_dias = 30;                         // precificacao
+    std::string agrupamento = "RAIZ_CNPJ";      // agrupamento da concentração
+    long data_base_dias = 0;                    // data base p/ NAO_VENCIDA (22/10/2026)
     std::unordered_set<std::string> tipos_aceitos;
-    std::unordered_set<std::string> situacoes_irregulares;
-    // Códigos dos validadores com "ativo": true (lidos do JSON)
-    std::unordered_set<std::string> validadores_ativos;
+    std::unordered_set<std::string> situacoes_aceitas;   // ["ATIVA"]
+    std::unordered_set<std::string> validadores_ativos;  // códigos com ativo:true
 };
 
 inline std::string trim(const std::string& s) {
@@ -59,12 +64,10 @@ inline std::string upper(std::string s) {
 
 // data dd/mm/aaaa -> dias desde epoch (aproximado)
 inline long data_para_dias(const std::string& d) {
-    // d = "dd/mm/aaaa"
     if (d.size() < 10) return 0;
     int dia = std::stoi(d.substr(0,2));
     int mes = std::stoi(d.substr(3,2));
     int ano = std::stoi(d.substr(6,4));
-    // dias desde ano 0 (formula simples)
     long dias = 365L * ano + ano/4 - ano/100 + ano/400;
     static const int dm[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
     for (int i = 1; i < mes; i++) dias += dm[i];
@@ -78,6 +81,27 @@ inline double parse_valor(const std::string& s) {
     try { return std::stod(t); } catch (...) { return 0.0; }
 }
 
+// Valida CNPJ (14 dígitos + dígitos verificadores)
+inline bool cnpj_valido(const std::string& cnpj) {
+    std::string d = so_digitos(cnpj);
+    if (d.size() != 14) return false;
+    bool todos_iguais = true;
+    for (int i = 1; i < 14; i++) if (d[i] != d[0]) { todos_iguais = false; break; }
+    if (todos_iguais) return false;
+    static const int p1[] = {5,4,3,2,9,8,7,6,5,4,3,2};
+    static const int p2[] = {6,5,4,3,2,9,8,7,6,5,4,3,2};
+    int soma = 0;
+    for (int i = 0; i < 12; i++) soma += (d[i]-'0') * p1[i];
+    int r = soma % 11;
+    int d1 = r < 2 ? 0 : 11 - r;
+    if (d1 != d[12]-'0') return false;
+    soma = 0;
+    for (int i = 0; i < 13; i++) soma += (d[i]-'0') * p2[i];
+    r = soma % 11;
+    int d2 = r < 2 ? 0 : 11 - r;
+    return d2 == d[13]-'0';
+}
+
 class MotorRegras {
 public:
     Config cfg;
@@ -85,12 +109,13 @@ public:
     std::unordered_map<std::string, std::string> situacao; // cnpj_normalizado -> situacao
 
     void carregar_config(const std::string& json_path) {
-        // Padrões seguros (usados se o JSON não existir ou estiver ilegível)
+        // Padrões seguros
         cfg.tipos_aceitos = {"Duplicata", "Duplicata de Serviço"};
-        cfg.situacoes_irregulares = {"BAIXADA", "INAPTA", "SUSPENSA"};
-        cfg.validadores_ativos = {"TIPO_RECEBIVEL", "PRAZO_MAXIMO", "VALOR_MINIMO",
-                                  "CONCENTRACAO_MAXIMA_SACADO", "SITUACAO_CADASTRAL_SACADO",
-                                  "TAXA_DESCONTO"};
+        cfg.situacoes_aceitas = {"ATIVA"};
+        cfg.validadores_ativos = {"CNPJ_SACADO_VALIDO", "SITUACAO_CADASTRAL_SACADO",
+                                  "TIPO_RECEBIVEL", "VALOR_MINIMO", "NAO_VENCIDA",
+                                  "PRAZO_MAXIMO", "CONCENTRACAO_MAXIMA_SACADO"};
+        cfg.data_base_dias = data_para_dias("22/10/2026"); // data base do edital
 
         std::ifstream f(json_path);
         if (!f.is_open()) return;
@@ -99,16 +124,38 @@ public:
 
         cfg.validadores_ativos.clear();
 
-        // Percorre cada objeto "{ ... }" do array de validadores
-        size_t pos = 0;
-        while (true) {
+        // ---- Precificação (objeto "precificacao") ----
+        {
+            size_t p = j.find("\"precificacao\"");
+            if (p != std::string::npos) {
+                size_t ob = j.find('{', p);
+                size_t cb = ob != std::string::npos ? j.find('}', ob) : std::string::npos;
+                if (ob != std::string::npos && cb != std::string::npos) {
+                    std::string bloco = j.substr(ob, cb - ob + 1);
+                    auto num = [&](const std::string& key, double def) -> double {
+                        size_t k = bloco.find(key);
+                        if (k == std::string::npos) return def;
+                        size_t c = bloco.find(':', k);
+                        if (c == std::string::npos) return def;
+                        size_t e = bloco.find_first_of(",}", c);
+                        try { return std::stod(trim(bloco.substr(c+1, e-c-1))); } catch (...) { return def; }
+                    };
+                    cfg.taxa_mensal_percentual = num("\"taxa_mensal_percentual\"", cfg.taxa_mensal_percentual);
+                    cfg.base_dias = (int)num("\"base_dias\"", cfg.base_dias);
+                }
+            }
+        }
+
+        // ---- Validadores (array "validadores") ----
+        size_t pos = j.find("\"validadores\"");
+        if (pos != std::string::npos) pos = j.find('[', pos);
+        while (pos != std::string::npos) {
             size_t open = j.find('{', pos);
             if (open == std::string::npos) break;
             size_t close = j.find('}', open);
             if (close == std::string::npos) break;
             std::string bloco = j.substr(open, close - open + 1);
 
-            // codigo
             std::string codigo;
             size_t pc = bloco.find("\"codigo\"");
             if (pc != std::string::npos) {
@@ -118,32 +165,25 @@ public:
                     codigo = bloco.substr(q1 + 1, q2 - q1 - 1);
             }
 
-            // ativo
             bool ativo = true;
             size_t pa = bloco.find("\"ativo\"");
-            if (pa != std::string::npos) {
-                ativo = bloco.find("true", pa) != std::string::npos;
-            }
+            if (pa != std::string::npos) ativo = bloco.find("true", pa) != std::string::npos;
 
             if (!codigo.empty() && ativo) cfg.validadores_ativos.insert(codigo);
 
-            // helper: número por chave dentro do bloco
             auto num = [&](const std::string& key, double def) -> double {
-                size_t p = bloco.find(key);
-                if (p == std::string::npos) return def;
-                size_t c = bloco.find(':', p);
+                size_t k = bloco.find(key);
+                if (k == std::string::npos) return def;
+                size_t c = bloco.find(':', k);
                 if (c == std::string::npos) return def;
                 size_t e = bloco.find_first_of(",}]", c);
-                std::string v = trim(bloco.substr(c + 1, e - c - 1));
-                try { return std::stod(v); } catch (...) { return def; }
+                try { return std::stod(trim(bloco.substr(c+1, e-c-1))); } catch (...) { return def; }
             };
-
-            // helper: lista de strings por chave dentro do bloco
             auto arr = [&](const std::string& key) -> std::unordered_set<std::string> {
                 std::unordered_set<std::string> out;
-                size_t p = bloco.find(key);
-                if (p == std::string::npos) return out;
-                size_t ob = bloco.find('[', p);
+                size_t k = bloco.find(key);
+                if (k == std::string::npos) return out;
+                size_t ob = bloco.find('[', k);
                 size_t cb = ob != std::string::npos ? bloco.find(']', ob) : std::string::npos;
                 if (ob == std::string::npos || cb == std::string::npos) return out;
                 std::string content = bloco.substr(ob + 1, cb - ob - 1);
@@ -158,23 +198,34 @@ public:
                 }
                 return out;
             };
+            auto str = [&](const std::string& key, const std::string& def) -> std::string {
+                size_t k = bloco.find(key);
+                if (k == std::string::npos) return def;
+                size_t q1 = bloco.find('"', k + key.size());
+                size_t q2 = q1 != std::string::npos ? bloco.find('"', q1 + 1) : std::string::npos;
+                if (q1 == std::string::npos || q2 == std::string::npos) return def;
+                return bloco.substr(q1 + 1, q2 - q1 - 1);
+            };
 
-            // Aplica parâmetros conforme o código do validador
             if (codigo == "TIPO_RECEBIVEL") {
                 auto v = arr("\"tipos_aceitos\"");
                 if (!v.empty()) cfg.tipos_aceitos = v;
-            } else if (codigo == "PRAZO_MAXIMO") {
-                cfg.prazo_maximo_dias = (int)num("\"limite_dias\"", cfg.prazo_maximo_dias);
-            } else if (codigo == "VALOR_MINIMO") {
-                cfg.valor_minimo = num("\"limite_minimo\"", cfg.valor_minimo);
-            } else if (codigo == "CONCENTRACAO_MAXIMA_SACADO") {
-                cfg.concentracao_percentual = num("\"limite_percentual\"", cfg.concentracao_percentual);
             } else if (codigo == "SITUACAO_CADASTRAL_SACADO") {
-                auto v = arr("\"situacoes_irregulares\"");
-                if (!v.empty()) cfg.situacoes_irregulares = v;
-            } else if (codigo == "TAXA_DESCONTO") {
-                cfg.taxa_desconto = num("\"taxa\"", cfg.taxa_desconto);
+                auto v = arr("\"situacoes_aceitas\"");
+                if (!v.empty()) cfg.situacoes_aceitas = v;
+            } else if (codigo == "VALOR_MINIMO") {
+                cfg.valor_minimo = num("\"valor_minimo\"", cfg.valor_minimo);
+            } else if (codigo == "PRAZO_MAXIMO") {
+                cfg.prazo_maximo_dias = (int)num("\"prazo_maximo_dias\"", cfg.prazo_maximo_dias);
+            } else if (codigo == "PRAZO_MINIMO") {
+                cfg.prazo_minimo_dias = (int)num("\"prazo_minimo_dias\"", cfg.prazo_minimo_dias);
+            } else if (codigo == "CONCENTRACAO_MAXIMA_SACADO") {
+                cfg.concentracao_percentual = num("\"percentual_maximo\"", cfg.concentracao_percentual);
+                cfg.agrupamento = str("\"agrupamento\"", cfg.agrupamento);
+            } else if (codigo == "CONCENTRACAO_MAXIMA_CEDENTE") {
+                cfg.concentracao_cedente_percentual = num("\"percentual_maximo\"", cfg.concentracao_cedente_percentual);
             }
+            // CNPJ_SACADO_VALIDO e NAO_VENCIDA não têm parâmetros; só o flag ativo importa
 
             pos = close + 1;
         }
@@ -184,15 +235,12 @@ public:
         std::ifstream f(path);
         if (!f.is_open()) return;
         std::string linha;
-        std::getline(f, linha); // header
+        std::getline(f, linha);
         while (std::getline(f, linha)) {
-            // NU_DOCUMENTO(6) | DOC_CEDENTE(3)
-            size_t i = 0; std::string campos[8]; int n = 0;
+            std::string campos[8]; int n = 0;
             std::stringstream ss(linha);
             while (std::getline(ss, campos[n], ';') && n < 7) n++;
-            if (n >= 7) {
-                estoque.insert(trim(campos[6]) + "|" + trim(campos[3]));
-            }
+            if (n >= 7) estoque.insert(trim(campos[6]) + "|" + trim(campos[3]));
         }
     }
 
@@ -200,17 +248,14 @@ public:
         std::ifstream f(path);
         if (!f.is_open()) return;
         std::string linha;
-        std::getline(f, linha); // header
+        std::getline(f, linha);
         while (std::getline(f, linha)) {
             size_t p = linha.find(';');
             if (p == std::string::npos) continue;
-            std::string doc = so_digitos(linha.substr(0, p));
-            std::string st = upper(trim(linha.substr(p+1)));
-            situacao[doc] = st;
+            situacao[so_digitos(linha.substr(0, p))] = upper(trim(linha.substr(p + 1)));
         }
     }
 
-    // Parseia CSV (cabeçalho + linhas de dados) em vetor de Nota
     std::vector<Nota> parse_csv(const std::string& conteudo) {
         std::vector<Nota> notas;
         notas.reserve(100000);
@@ -219,7 +264,7 @@ public:
         bool primeiro = true;
         while (std::getline(ss, linha)) {
             if (linha.empty()) continue;
-            if (primeiro) { primeiro = false; continue; } // skip header
+            if (primeiro) { primeiro = false; continue; }
             std::vector<std::string> c;
             c.reserve(11);
             std::stringstream ls(linha);
@@ -238,81 +283,116 @@ public:
             n.data_vencimento = c[9];
             long dv = data_para_dias(c[9]);
             long da = data_para_dias(c[10]);
+            n.data_vencimento_dias = dv;
             n.prazo_dias = dv - da;
             notas.push_back(std::move(n));
         }
         return notas;
     }
 
-    // Processa o lote e aplica regras. Retorna contagem via parâmetros.
     void processar(std::vector<Nota>& notas, long& aprovadas, long& recusadas,
                    double& total_liquido, bool checar_integridade = false) {
-        // Passo 1: agregar total por fundo e por (fundo, raiz sacado)
+        // Passo 1: agregação (fundo + concentração por raiz CNPJ do sacado)
         std::unordered_map<std::string, double> fundo_total;
-        std::unordered_map<std::string, double> conc; // "fundo|raiz" -> valor
+        std::unordered_map<std::string, double> conc_sacado;
+        std::unordered_map<std::string, double> conc_cedente;
         fundo_total.reserve(32);
-        conc.reserve(notas.size());
+        conc_sacado.reserve(notas.size());
+        conc_cedente.reserve(notas.size());
         for (const auto& n : notas) {
             fundo_total[n.doc_fundo] += n.valor_nominal;
-            std::string raiz = so_digitos(n.doc_sacado).substr(0, 8);
-            conc[n.doc_fundo + "|" + raiz] += n.valor_nominal;
+            std::string raiz_sacado = so_digitos(n.doc_sacado).substr(0, 8);
+            std::string raiz_cedente = so_digitos(n.doc_cedente).substr(0, 8);
+            conc_sacado[n.doc_fundo + "|" + raiz_sacado] += n.valor_nominal;
+            conc_cedente[n.doc_fundo + "|" + raiz_cedente] += n.valor_nominal;
         }
 
-        // Passo 2: avaliar cada nota (integridade + regras de negócio)
         aprovadas = recusadas = 0;
         total_liquido = 0.0;
         std::unordered_set<std::string> visto_no_lote;
         visto_no_lote.reserve(notas.size());
+
         for (auto& n : notas) {
             n.motivos.clear();
-            // INTEGRIDADE (apenas no fluxo real de submissão de lote)
+
+            // INTEGRIDADE (fluxo real de submissão)
             if (checar_integridade) {
                 std::string chave = n.nu_documento + "|" + n.doc_cedente;
-                // título já negociado no estoque histórico
-                if (estoque.count(chave)) {
-                    n.motivos.push_back("ERR_STOCK_ALREADY_SOLD");
-                }
-                // duplicado dentro do próprio lote
-                if (visto_no_lote.count(chave)) {
-                    n.motivos.push_back("ERR_BATCH_DUPLICATE");
-                } else {
-                    visto_no_lote.insert(chave);
+                if (estoque.count(chave)) n.motivos.push_back("ERR_STOCK_ALREADY_SOLD");
+                if (visto_no_lote.count(chave)) n.motivos.push_back("ERR_BATCH_DUPLICATE");
+                else visto_no_lote.insert(chave);
+            }
+
+            // CNPJ_SACADO_VALIDO
+            if (cfg.validadores_ativos.count("CNPJ_SACADO_VALIDO") &&
+                !cnpj_valido(n.doc_sacado)) {
+                n.motivos.push_back("CNPJ_SACADO_VALIDO");
+            }
+
+            // SITUACAO_CADASTRAL_SACADO (allow-list: só situações aceitas)
+            if (cfg.validadores_ativos.count("SITUACAO_CADASTRAL_SACADO")) {
+                auto it = situacao.find(so_digitos(n.doc_sacado));
+                if (it == situacao.end() || !cfg.situacoes_aceitas.count(it->second)) {
+                    n.motivos.push_back("SITUACAO_CADASTRAL_SACADO");
                 }
             }
+
             // TIPO_RECEBIVEL
             if (cfg.validadores_ativos.count("TIPO_RECEBIVEL") &&
                 !cfg.tipos_aceitos.count(n.tipo_recebivel)) {
                 n.motivos.push_back("TIPO_RECEBIVEL");
             }
-            // PRAZO_MAXIMO
-            if (cfg.validadores_ativos.count("PRAZO_MAXIMO") &&
-                n.prazo_dias > cfg.prazo_maximo_dias) {
-                n.motivos.push_back("PRAZO_MAXIMO");
-            }
+
             // VALOR_MINIMO
             if (cfg.validadores_ativos.count("VALOR_MINIMO") &&
                 n.valor_nominal < cfg.valor_minimo) {
                 n.motivos.push_back("VALOR_MINIMO");
             }
-            // CONCENTRACAO_MAXIMA_SACADO
-            std::string raiz = so_digitos(n.doc_sacado).substr(0, 8);
-            double ft = fundo_total[n.doc_fundo];
-            double cv = conc[n.doc_fundo + "|" + raiz];
-            if (cfg.validadores_ativos.count("CONCENTRACAO_MAXIMA_SACADO") &&
-                ft > 0 && (cv / ft) * 100.0 > cfg.concentracao_percentual) {
-                n.motivos.push_back("CONCENTRACAO_MAXIMA_SACADO");
+
+            // NAO_VENCIDA (data de vencimento >= data base)
+            if (cfg.validadores_ativos.count("NAO_VENCIDA") &&
+                n.data_vencimento_dias < cfg.data_base_dias) {
+                n.motivos.push_back("NAO_VENCIDA");
             }
-            // SITUACAO_CADASTRAL_SACADO
-            std::string doc = so_digitos(n.doc_sacado);
-            auto it = situacao.find(doc);
-            if (cfg.validadores_ativos.count("SITUACAO_CADASTRAL_SACADO") &&
-                it != situacao.end() && cfg.situacoes_irregulares.count(it->second)) {
-                n.motivos.push_back("SITUACAO_CADASTRAL_SACADO");
+
+            // PRAZO_MAXIMO
+            if (cfg.validadores_ativos.count("PRAZO_MAXIMO") &&
+                n.prazo_dias > cfg.prazo_maximo_dias) {
+                n.motivos.push_back("PRAZO_MAXIMO");
+            }
+
+            // PRAZO_MINIMO (inativo por padrão)
+            if (cfg.validadores_ativos.count("PRAZO_MINIMO") &&
+                n.prazo_dias < cfg.prazo_minimo_dias) {
+                n.motivos.push_back("PRAZO_MINIMO");
+            }
+
+            // CONCENTRACAO_MAXIMA_SACADO
+            if (cfg.validadores_ativos.count("CONCENTRACAO_MAXIMA_SACADO")) {
+                std::string raiz = so_digitos(n.doc_sacado).substr(0, 8);
+                double ft = fundo_total[n.doc_fundo];
+                double cv = conc_sacado[n.doc_fundo + "|" + raiz];
+                if (ft > 0 && (cv / ft) * 100.0 > cfg.concentracao_percentual) {
+                    n.motivos.push_back("CONCENTRACAO_MAXIMA_SACADO");
+                }
+            }
+
+            // CONCENTRACAO_MAXIMA_CEDENTE (inativo por padrão)
+            if (cfg.validadores_ativos.count("CONCENTRACAO_MAXIMA_CEDENTE")) {
+                std::string raiz = so_digitos(n.doc_cedente).substr(0, 8);
+                double ft = fundo_total[n.doc_fundo];
+                double cv = conc_cedente[n.doc_fundo + "|" + raiz];
+                if (ft > 0 && (cv / ft) * 100.0 > cfg.concentracao_cedente_percentual) {
+                    n.motivos.push_back("CONCENTRACAO_MAXIMA_CEDENTE");
+                }
             }
 
             if (n.motivos.empty()) {
                 aprovadas++;
-                n.valor_liquido = n.valor_nominal * (1.0 - cfg.taxa_desconto);
+                // Precificação: desconto simples proporcional ao prazo
+                double desconto = n.valor_nominal * (cfg.taxa_mensal_percentual / 100.0)
+                                  * ((double)n.prazo_dias / cfg.base_dias);
+                n.valor_liquido = n.valor_nominal - desconto;
                 total_liquido += n.valor_liquido;
             } else {
                 recusadas++;
