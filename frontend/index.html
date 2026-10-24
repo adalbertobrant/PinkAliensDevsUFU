@@ -11,7 +11,7 @@
       theme: {
         extend: {
           colors: {
-            'kp': {          // Kanastra palette
+            'kp': {
               profundo: '#193C32',
               institucional: '#14735A',
               destaque: '#2DAA82',
@@ -19,10 +19,7 @@
               borda: '#E2E8F0',
             }
           },
-          fontFamily: {
-            display: ['"Inter"', 'system-ui', 'sans-serif'],
-            body: ['"Inter"', 'system-ui', 'sans-serif'],
-          }
+          fontFamily: { body: ['"Inter"', 'system-ui', 'sans-serif'] }
         }
       }
     }
@@ -32,13 +29,18 @@
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; background: #F3F2F3; }
     .tabular { font-variant-numeric: tabular-nums; }
-    .fade-in { animation: fadeIn 0.25s ease; }
+    .fade-in { animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .dropzone.dragover { border-color: #2DAA82; background: #ECFDF5; }
     .progress-bar { transition: width 0.3s ease; }
-    .badge { font-variant-numeric: tabular-nums; }
+    .situacao-ativo { background:#D1FAE5; color:#065F46; }
+    .situacao-inapto { background:#FEE2E2; color:#B91C1C; }
+    .situacao-suspenso { background:#FEF3C7; color:#92400E; }
+    .situacao-inativo { background:#E5E7EB; color:#4B5563; }
+    .situacao-invalido { background:#FEE2E2; color:#B91C1C; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    .linha-editavel input { border:1px solid #2DAA82; border-radius:6px; padding:2px 6px; font-size:0.8rem; width:100%; }
   </style>
 </head>
 <body class="min-h-screen text-gray-800">
@@ -49,133 +51,133 @@
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-lg bg-kp-destaque flex items-center justify-center font-extrabold text-lg">A</div>
         <div>
-          <h1 class="font-display font-light text-xl tracking-wide leading-none">Antecipe</h1>
+          <h1 class="font-light text-xl tracking-wide leading-none">Antecipe</h1>
           <p class="text-xs text-white/60">Antecipação de Recebíveis FIDC</p>
         </div>
       </div>
-      <div class="hidden sm:block text-xs text-white/60">Motor de regras · Kanastra</div>
+      <div class="hidden sm:block text-xs text-white/60">Kanastra</div>
     </div>
   </header>
 
-  <!-- Tabs -->
-  <nav class="bg-white border-b border-kp-borda">
-    <div class="max-w-7xl mx-auto px-4 flex gap-1">
-      <button data-tab="upload" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-kp-institucional text-kp-institucional">Upload &amp; Monitoramento</button>
-      <button data-tab="analise" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Análise &amp; Edição de Notas</button>
-    </div>
-  </nav>
-
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- ============ ABA 1: UPLOAD ============ -->
-    <section id="tab-upload" class="tab-panel fade-in">
-      <!-- Onboarding -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-xl border border-kp-borda p-5">
-          <div class="w-8 h-8 rounded-full bg-kp-institucional text-white flex items-center justify-center text-sm font-bold mb-3">1</div>
-          <h3 class="font-semibold mb-1">Prepare seu lote</h3>
-          <p class="text-sm text-gray-500">Envie seu arquivo CSV com separador ponto e vírgula (;), datas em dd/mm/aaaa e valores com vírgula.</p>
-        </div>
-        <div class="bg-white rounded-xl border border-kp-borda p-5">
-          <div class="w-8 h-8 rounded-full bg-kp-institucional text-white flex items-center justify-center text-sm font-bold mb-3">2</div>
-          <h3 class="font-semibold mb-1">Análise Instantânea</h3>
-          <p class="text-sm text-gray-500">Nosso motor valida prazos, concentração de crédito, duplicidades e a situação cadastral do CNPJ de cada sacado.</p>
-        </div>
-        <div class="bg-white rounded-xl border border-kp-borda p-5">
-          <div class="w-8 h-8 rounded-full bg-kp-institucional text-white flex items-center justify-center text-sm font-bold mb-3">3</div>
-          <h3 class="font-semibold mb-1">Liquidez ou Correção</h3>
-          <p class="text-sm text-gray-500">Receba o valor líquido das notas aprovadas e corrija pendências diretamente na tela.</p>
-        </div>
+    <!-- ============ ETAPA 1 — ONBOARDING ============ -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl border border-kp-borda p-5">
+        <svg class="w-6 h-6 text-kp-institucional mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <h3 class="font-semibold mb-1">Prepare seu lote</h3>
+        <p class="text-sm text-gray-500">Envie seu arquivo CSV com separador ponto e vírgula (;), datas em dd/mm/aaaa e valores com vírgula.</p>
+      </div>
+      <div class="bg-white rounded-xl border border-kp-borda p-5">
+        <svg class="w-6 h-6 text-kp-institucional mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.6 2A9 9 0 1112 3a9 9 0 016.6 15"/></svg>
+        <h3 class="font-semibold mb-1">Análise Instantânea</h3>
+        <p class="text-sm text-gray-500">Nosso motor valida prazos, concentração de crédito, duplicidades e a situação cadastral do CNPJ de cada sacado.</p>
+      </div>
+      <div class="bg-white rounded-xl border border-kp-borda p-5">
+        <svg class="w-6 h-6 text-kp-institucional mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.7 0-3 .9-3 2s1.3 2 3 2 3 .9 3 2-1.3 2-3 2m0-8v1m0 7v1m-6-5h.01M18 10h.01"/></svg>
+        <h3 class="font-semibold mb-1">Liquidez ou Correção</h3>
+        <p class="text-sm text-gray-500">Receba o valor líquido das notas aprovadas e corrija pendências diretamente na plataforma.</p>
+      </div>
+    </div>
+
+    <!-- ============ ETAPA 2 — UPLOAD ============ -->
+    <section id="secao-upload" class="bg-white rounded-xl border border-kp-borda p-6">
+      <div id="dropzone" class="dropzone border-2 border-dashed border-kp-borda rounded-xl p-10 text-center cursor-pointer transition-colors">
+        <svg class="mx-auto w-12 h-12 text-kp-institucional mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        <p class="font-medium">Arraste e solte o arquivo CSV aqui</p>
+        <p class="text-sm text-gray-500 mt-1">ou <span class="text-kp-institucional font-medium">selecione manualmente</span></p>
+        <input type="file" id="arquivo" accept=".csv,text/csv" class="hidden" />
       </div>
 
-      <!-- Dropzone -->
-      <div class="bg-white rounded-xl border border-kp-borda p-6">
-        <div id="dropzone" class="dropzone border-2 border-dashed border-kp-borda rounded-xl p-10 text-center cursor-pointer transition-colors">
-          <svg class="mx-auto w-12 h-12 text-kp-institucional mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-          <p class="font-medium">Arraste e solte o arquivo CSV aqui</p>
-          <p class="text-sm text-gray-500 mt-1">ou <span class="text-kp-institucional font-medium">selecione manualmente</span></p>
-          <input type="file" id="arquivo" accept=".csv,text/csv" class="hidden" />
-        </div>
-
-        <!-- Arquivo selecionado -->
-        <div id="arquivo-info" class="hidden mt-4 flex items-center justify-between bg-kp-fundo rounded-lg p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-kp-institucional/10 flex items-center justify-center text-kp-institucional font-bold">CSV</div>
-            <div>
-              <p id="arquivo-nome" class="font-medium text-sm"></p>
-              <p id="arquivo-tamanho" class="text-xs text-gray-500"></p>
-            </div>
+      <div id="arquivo-info" class="hidden mt-4 flex items-center justify-between bg-kp-fundo rounded-lg p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-kp-institucional/10 flex items-center justify-center text-kp-institucional font-bold">CSV</div>
+          <div>
+            <p id="arquivo-nome" class="font-medium text-sm"></p>
+            <p id="arquivo-tamanho" class="text-xs text-gray-500"></p>
           </div>
-          <button id="btn-remover" class="text-sm text-red-500 hover:text-red-600 font-medium">Remover</button>
         </div>
-
-        <!-- Config API -->
-        <div class="mt-4 flex items-center gap-2 text-sm text-gray-500">
-          <label for="api-url">API:</label>
-          <input type="text" id="api-url" value="http://localhost:3000" class="flex-1 border border-kp-borda rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-kp-institucional" />
-        </div>
-
-        <button id="btn-processar" disabled class="mt-4 w-full bg-kp-institucional hover:bg-kp-profundo text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          Processar Lote
-        </button>
+        <button id="btn-remover" class="text-sm text-red-500 hover:text-red-600 font-medium">Remover</button>
       </div>
 
-      <!-- Progresso -->
-      <div id="progresso" class="hidden mt-6 bg-white rounded-xl border border-kp-borda p-6">
-        <div class="flex items-center justify-between mb-2">
-          <p id="progresso-etapa" class="font-medium text-sm text-kp-institucional">Lendo arquivo...</p>
-          <p class="text-sm text-gray-500 tabular"><span id="progresso-pct">0</span>%</p>
-        </div>
-        <div class="w-full h-2 bg-kp-fundo rounded-full overflow-hidden">
-          <div id="progresso-barra" class="progress-bar h-full bg-kp-destaque" style="width:0%"></div>
-        </div>
-        <div class="flex justify-between mt-2 text-xs text-gray-500 tabular">
-          <span>Decorrido: <span id="progresso-decorrido">0s</span></span>
-          <span>Restante: <span id="progresso-restante">—</span></span>
-        </div>
-        <button id="btn-cancelar" class="mt-3 text-sm text-red-500 hover:text-red-600 font-medium">Cancelar envio</button>
+      <div class="mt-4 flex items-center gap-2 text-sm text-gray-500">
+        <label for="api-url">API:</label>
+        <input type="text" id="api-url" value="http://localhost:3000" class="flex-1 border border-kp-borda rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-kp-institucional" />
       </div>
 
-      <!-- Estado (sucesso / erro / timeout) -->
-      <div id="estado" class="hidden mt-6"></div>
+      <button id="btn-processar" disabled class="mt-4 w-full bg-kp-institucional hover:bg-kp-profundo text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Processar Lote
+      </button>
     </section>
 
-    <!-- ============ ABA 2: ANÁLISE ============ -->
-    <section id="tab-analise" class="tab-panel hidden fade-in">
+    <!-- ============ ETAPA 3 — PROCESSAMENTO ============ -->
+    <section id="secao-progresso" class="hidden mt-6 bg-white rounded-xl border border-kp-borda p-6">
+      <div class="flex items-center justify-between mb-2">
+        <p id="progresso-etapa" class="font-medium text-sm text-kp-institucional">Lendo arquivo...</p>
+        <p class="text-sm text-gray-500 tabular"><span id="progresso-pct">0</span>%</p>
+      </div>
+      <div class="w-full h-2 bg-kp-fundo rounded-full overflow-hidden">
+        <div id="progresso-barra" class="progress-bar h-full bg-kp-destaque" style="width:0%"></div>
+      </div>
+      <div class="flex justify-between mt-2 text-xs text-gray-500 tabular">
+        <span>Decorrido: <span id="progresso-decorrido">0s</span></span>
+        <span>Restante: <span id="progresso-restante">—</span></span>
+      </div>
+      <button id="btn-cancelar" class="mt-3 text-sm text-red-500 hover:text-red-600 font-medium">Cancelar Envio</button>
+    </section>
+
+    <!-- Estado (erro / timeout) -->
+    <div id="estado" class="hidden mt-6"></div>
+
+    <!-- ============ ETAPA 4-8 — RESULTADOS ============ -->
+    <section id="secao-resultados" class="hidden mt-6">
 
       <!-- Hero Financeiro -->
-      <div class="bg-kp-profundo text-white rounded-xl p-6 mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div class="bg-kp-profundo text-white rounded-xl p-6 mb-6 fade-in">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           <div>
-            <p class="text-white/60 text-sm">Total de títulos submetidos</p>
-            <p id="hero-total" class="text-3xl font-semibold tabular mt-1">0</p>
+            <p class="text-white/60 text-xs uppercase tracking-wide">Títulos submetidos</p>
+            <p id="hero-total" class="text-2xl font-semibold tabular mt-1">0</p>
           </div>
           <div>
-            <p class="text-white/60 text-sm">Aprovadas para cessão</p>
-            <p id="hero-aprovadas" class="text-3xl font-semibold tabular mt-1 text-kp-destaque">0</p>
+            <p class="text-white/60 text-xs uppercase tracking-wide">Aprovadas</p>
+            <p id="hero-aprovadas" class="text-2xl font-semibold tabular mt-1 text-kp-destaque">0</p>
           </div>
           <div>
-            <p class="text-white/60 text-sm">Total líquido a receber</p>
-            <p id="hero-liquido" class="text-3xl font-semibold tabular mt-1">R$ 0,00</p>
+            <p class="text-white/60 text-xs uppercase tracking-wide">Recusadas</p>
+            <p id="hero-recusadas" class="text-2xl font-semibold tabular mt-1 text-amber-300">0</p>
+          </div>
+          <div>
+            <p class="text-white/60 text-xs uppercase tracking-wide">Bruto aprovado</p>
+            <p id="hero-bruto" class="text-lg font-medium tabular mt-1">R$ 0,00</p>
+          </div>
+          <div>
+            <p class="text-white/60 text-xs uppercase tracking-wide">Desconto total</p>
+            <p id="hero-desconto" class="text-lg font-medium tabular mt-1">R$ 0,00</p>
+          </div>
+          <div class="col-span-2 md:col-span-1 lg:col-span-1">
+            <p class="text-white/60 text-xs uppercase tracking-wide">Total líquido</p>
+            <p id="hero-liquido" class="text-3xl font-bold tabular mt-1 text-kp-destaque">R$ 0,00</p>
           </div>
         </div>
-        <div class="mt-5 flex flex-wrap items-center gap-4">
-          <p class="text-white/70 text-sm flex-1">Recusadas: <span id="hero-recusadas" class="font-semibold text-white tabular">0</span></p>
-          <button id="btn-confirmar" class="bg-kp-destaque hover:bg-kp-institucional text-white font-semibold px-5 py-2.5 rounded-lg transition-colors">Confirmar Antecipação do Lote Aprovado</button>
+        <div class="mt-5 flex justify-end">
+          <button id="btn-confirmar" class="bg-kp-destaque hover:bg-kp-institucional text-white font-semibold px-5 py-2.5 rounded-lg transition-colors">
+            Confirmar Antecipação do Lote Aprovado
+          </button>
         </div>
       </div>
 
       <!-- Diagnóstico Agrupado -->
       <div id="diagnostico" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
 
-      <!-- Ação global -->
+      <!-- Ação geral -->
       <div class="mb-4 flex flex-wrap gap-3 items-center">
         <button id="btn-baixar-rejeitadas" class="bg-white border border-kp-borda hover:border-kp-institucional text-kp-institucional font-medium px-4 py-2 rounded-lg text-sm transition-colors">
           ⬇ Baixar CSV com Todas as Notas Recusadas
         </button>
       </div>
 
-      <!-- Filtros -->
+      <!-- Tabela -->
       <div class="bg-white rounded-xl border border-kp-borda p-4">
         <div class="flex flex-wrap gap-2 mb-4">
           <button data-filtro="todas" class="filtro-btn px-3 py-1.5 rounded-full text-sm font-medium bg-kp-profundo text-white">Todas (<span id="f-todas">0</span>)</button>
@@ -186,14 +188,14 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-left text-xs text-gray-500 border-b border-kp-borda">
-                <th class="py-2 pr-3 font-medium">NOTA</th>
-                <th class="py-2 pr-3 font-medium">SACADO</th>
+              <tr class="text-left text-xs text-gray-500 border-b border-kp-borda uppercase">
+                <th class="py-2 pr-3 font-medium">Nota</th>
+                <th class="py-2 pr-3 font-medium">Sacado</th>
                 <th class="py-2 pr-3 font-medium">CNPJ</th>
-                <th class="py-2 pr-3 font-medium">VENCIMENTO</th>
-                <th class="py-2 pr-3 font-medium text-right">VALOR</th>
-                <th class="py-2 pr-3 font-medium">STATUS DA NOTA</th>
-                <th class="py-2 font-medium">MOTIVO</th>
+                <th class="py-2 pr-3 font-medium text-right">Vencimento</th>
+                <th class="py-2 pr-3 font-medium text-right">Valor</th>
+                <th class="py-2 pr-3 font-medium">Status</th>
+                <th class="py-2 font-medium">Ações</th>
               </tr>
             </thead>
             <tbody id="tabela-corpo"></tbody>
@@ -217,8 +219,11 @@
         </div>
       </div>
 
-      <!-- Barra financeira fixa (resumo da nota em foco) -->
-      <div id="barra-financeira" class="hidden mt-6 bg-white rounded-xl border border-kp-borda p-5 sticky bottom-4 shadow-lg"></div>
+      <!-- Banner contextual (nota recusada selecionada) -->
+      <div id="banner" class="hidden mt-4"></div>
+
+      <!-- Barra financeira (nota aprovada selecionada) -->
+      <div id="barra-financeira" class="hidden mt-4 bg-white rounded-xl border border-kp-borda p-5 sticky bottom-4 shadow-lg"></div>
     </section>
 
   </main>
@@ -228,45 +233,31 @@
     const state = {
       arquivo: null,
       conteudo: null,
-      notas: [],          // todas as notas processadas
+      notas: [],
       filtro: 'todas',
       pagina: 1,
       linhasPagina: 20,
       cancelado: false,
-      processando: false,
     };
+    let editandoNf = null;
 
-    // ---------- Referências ----------
     const $ = (id) => document.getElementById(id);
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panels = document.querySelectorAll('.tab-panel');
-
-    // ---------- Navegação por abas ----------
-    tabs.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        tabs.forEach((b) => {
-          b.classList.remove('border-kp-institucional', 'text-kp-institucional');
-          b.classList.add('border-transparent', 'text-gray-500');
-        });
-        btn.classList.add('border-kp-institucional', 'text-kp-institucional');
-        btn.classList.remove('border-transparent', 'text-gray-500');
-        panels.forEach((p) => p.classList.add('hidden'));
-        $(`tab-${btn.dataset.tab}`).classList.remove('hidden');
-      });
-    });
 
     // ---------- Upload (drag & drop) ----------
     const dropzone = $('dropzone');
     const fileInput = $('arquivo');
-
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach((ev) => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }));
     ['dragleave', 'drop'].forEach((ev) => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
     dropzone.addEventListener('drop', (e) => { const f = e.dataTransfer.files[0]; if (f) selecionarArquivo(f); });
     fileInput.addEventListener('change', () => { if (fileInput.files[0]) selecionarArquivo(fileInput.files[0]); });
-    $('btn-remover').addEventListener('click', () => { state.arquivo = null; state.conteudo = null; $('arquivo-info').classList.add('hidden'); $('btn-processar').disabled = true; });
+    $('btn-remover').addEventListener('click', () => { state.arquivo = null; $('arquivo-info').classList.add('hidden'); $('btn-processar').disabled = true; });
 
     function selecionarArquivo(f) {
+      if (!f.name.toLowerCase().endsWith('.csv')) {
+        alert('Formato incompatível. Envie um arquivo CSV.');
+        return;
+      }
       state.arquivo = f;
       $('arquivo-nome').textContent = f.name;
       $('arquivo-tamanho').textContent = `${(f.size / 1024).toFixed(1)} KB`;
@@ -279,26 +270,13 @@
     $('btn-cancelar').addEventListener('click', () => { state.cancelado = true; });
 
     async function processar() {
-      if (!state.arquivo) {
-        alert('Por favor, carregue um arquivo CSV antes de processar o lote.');
-        return;
-      }
+      if (!state.arquivo) { alert('Por favor, carregue um arquivo CSV antes de processar o lote.'); return; }
       state.cancelado = false;
-      state.processando = true;
-
-      // Lê o arquivo
       const conteudo = await lerArquivo(state.arquivo);
-      if (state.cancelado) return resetarProgresso('cancelado');
 
-      // Validação estrutural (client-side)
       const relatorio = validarEstrutura(conteudo);
-      if (relatorio.total_erros > 0) {
-        mostrarErroEstrutural(relatorio);
-        return;
-      }
-      if (state.cancelado) return resetarProgresso('cancelado');
+      if (relatorio.total_erros > 0) { mostrarErroEstrutural(relatorio); return; }
 
-      // Envia ao backend com barra de progresso
       await enviarComProgresso(conteudo);
     }
 
@@ -311,76 +289,46 @@
     }
 
     function validarEstrutura(conteudo) {
-      // Usa o mesmo validador do error_report.js (via analisarArquivoCsv não dá,
-      // então validamos inline de forma equivalente)
       const linhas = conteudo.replace(/\r\n/g, '\n').split('\n');
       const cabecalho = linhas[0] || '';
       const colunas = cabecalho.split(';').map((c) => c.trim());
       const obrigatorias = ['NOME_FUNDO','DOC_FUNDO','NOME_CEDENTE','DOC_CEDENTE','NOME_SACADO','DOC_SACADO','NU_DOCUMENTO','TIPO_RECEBIVEL','VALOR_NOMINAL','DATA_VENCIMENTO_ORIGINAL','DATA_AQUISICAO'];
       const erros = [];
-
-      if (!cabecalho.includes(';')) {
-        erros.push({ linha: 1, tipo: 'ERR_CSV_SEPARATOR', mensagem: 'O separador deve ser ponto e vírgula (;).' });
-        return { total_erros: erros.length, por_tipo: { ERR_CSV_SEPARATOR: 1 }, erros };
-      }
+      if (!cabecalho.includes(';')) { erros.push({ linha: 1, tipo: 'ERR_CSV_SEPARATOR', mensagem: 'O separador deve ser ponto e vírgula (;).' }); return { total_erros: erros.length, por_tipo: { ERR_CSV_SEPARATOR: 1 }, erros }; }
       const faltantes = obrigatorias.filter((c) => !colunas.includes(c));
-      if (faltantes.length > 0) {
-        erros.push({ linha: 1, tipo: 'ERR_CSV_HEADER_MISSING', mensagem: `Colunas ausentes: ${faltantes.join(', ')}` });
-        return { total_erros: erros.length, por_tipo: { ERR_CSV_HEADER_MISSING: 1 }, erros };
-      }
-
-      const idxValor = colunas.indexOf('VALOR_NOMINAL');
-      const idxVenc = colunas.indexOf('DATA_VENCIMENTO_ORIGINAL');
-      const idxAquis = colunas.indexOf('DATA_AQUISICAO');
-      const reData = /^\d{2}\/\d{2}\/\d{4}$/;
-      const reValor = /^\d+(,\d+)?$/;
-
+      if (faltantes.length > 0) { erros.push({ linha: 1, tipo: 'ERR_CSV_HEADER_MISSING', mensagem: `Colunas obrigatórias ausentes: ${faltantes.join(', ')}` }); return { total_erros: erros.length, por_tipo: { ERR_CSV_HEADER_MISSING: 1 }, erros }; }
+      const idxValor = colunas.indexOf('VALOR_NOMINAL'), idxVenc = colunas.indexOf('DATA_VENCIMENTO_ORIGINAL'), idxAquis = colunas.indexOf('DATA_AQUISICAO');
+      const reData = /^\d{2}\/\d{2}\/\d{4}$/, reValor = /^\d+(,\d+)?$/;
       for (let i = 1; i < linhas.length; i++) {
-        const linha = linhas[i];
-        if (!linha || !linha.trim()) continue;
-        const c = linha.split(';');
-        const problemas = [];
-        for (const [idx, nome] of [[idxVenc,'DATA_VENCIMENTO_ORIGINAL'],[idxAquis,'DATA_AQUISICAO']]) {
-          const v = (c[idx]||'').trim();
-          if (v && !reData.test(v)) problemas.push(`${nome} em dd/mm/aaaa`);
-        }
-        const valor = (c[idxValor]||'').trim();
-        if (valor && !reValor.test(valor)) problemas.push('VALOR_NOMINAL com vírgula decimal');
-        if (problemas.length) {
-          const tipo = problemas.some((p) => p.includes('VALOR_NOMINAL')) ? 'ERR_CSV_NUMERIC_FORMAT' : 'ERR_CSV_DATE_FORMAT';
-          erros.push({ linha: i + 1, tipo, mensagem: problemas.join(' | '), conteudo: linha });
-        }
+        const linha = linhas[i]; if (!linha || !linha.trim()) continue;
+        const c = linha.split(';'); const problemas = [];
+        for (const [idx, nome] of [[idxVenc,'DATA_VENCIMENTO_ORIGINAL'],[idxAquis,'DATA_AQUISICAO']]) { const v = (c[idx]||'').trim(); if (v && !reData.test(v)) problemas.push(`${nome} em dd/mm/aaaa`); }
+        const valor = (c[idxValor]||'').trim(); if (valor && !reValor.test(valor)) problemas.push('VALOR_NOMINAL com vírgula decimal');
+        if (problemas.length) { const tipo = problemas.some((p) => p.includes('VALOR_NOMINAL')) ? 'ERR_CSV_NUMERIC_FORMAT' : 'ERR_CSV_DATE_FORMAT'; erros.push({ linha: i + 1, tipo, mensagem: problemas.join(' | '), conteudo: linha }); }
       }
-
-      const por_tipo = {};
-      erros.forEach((e) => { por_tipo[e.tipo] = (por_tipo[e.tipo] || 0) + 1; });
+      const por_tipo = {}; erros.forEach((e) => { por_tipo[e.tipo] = (por_tipo[e.tipo] || 0) + 1; });
       return { total_erros: erros.length, por_tipo, erros, cabecalho };
     }
 
     async function enviarComProgresso(conteudo) {
       const baseUrl = $('api-url').value.replace(/\/$/, '');
-      $('progresso').classList.remove('hidden');
+      $('secao-progresso').classList.remove('hidden');
       $('estado').classList.add('hidden');
       $('btn-processar').disabled = true;
 
-      const etapas = ['Lendo arquivo', 'Validando integridade e duplicidades', 'Consultando estoque', 'Finalizando cálculos'];
+      const etapas = ['Lendo arquivo', 'Validando integridade e duplicidades', 'Consultando estoque', 'Verificando situação cadastral dos CNPJs', 'Finalizando cálculos'];
       const t0 = Date.now();
-      const timer = setInterval(() => {
-        const d = ((Date.now() - t0) / 1000).toFixed(0);
-        $('progresso-decorrido').textContent = `${d}s`;
-      }, 500);
+      const timer = setInterval(() => { $('progresso-decorrido').textContent = `${((Date.now() - t0) / 1000).toFixed(0)}s`; }, 500);
 
       try {
         for (let i = 0; i < etapas.length; i++) {
           if (state.cancelado) throw new Error('cancelado');
           $('progresso-etapa').textContent = etapas[i] + '...';
           setProgresso((i / etapas.length) * 100);
-          await sleep(250);
+          await sleep(200);
         }
-
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 240000); // 240s (4 min) timeout
-
+        const timeout = setTimeout(() => controller.abort(), 240000);
         const resp = await fetch(`${baseUrl}/api/v1/lotes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -388,112 +336,94 @@
           signal: controller.signal,
         });
         clearTimeout(timeout);
-
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          throw new Error(err.erro?.mensagem || `Erro ${resp.status}`);
-        }
-
+        if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.erro?.mensagem || `Erro ${resp.status}`); }
         const dados = await resp.json();
-        setProgresso(100);
-        $('progresso-etapa').textContent = 'Concluído';
-        await sleep(300);
-
+        setProgresso(100); $('progresso-etapa').textContent = 'Concluído';
+        await sleep(250);
         clearInterval(timer);
-        $('progresso').classList.add('hidden');
-        $('estado').classList.add('hidden');
-
-        // Preenche a aba de análise
+        $('secao-progresso').classList.add('hidden');
         state.notas = dados.notas || [];
-        renderAnalise(dados);
-
-        // Muda para a aba de análise
-        document.querySelector('[data-tab="analise"]').click();
-
+        renderResultados(dados);
       } catch (e) {
         clearInterval(timer);
-        $('progresso').classList.add('hidden');
-        if (e.message === 'cancelado') {
-          mostrarEstado('cancelado', 'Envio cancelado pelo usuário.');
-        } else if (e.name === 'AbortError') {
-          mostrarEstado('timeout', 'O processamento excedeu o tempo limite (4 min).');
-        } else if (e instanceof TypeError) {
-          mostrarEstado('erro', `Falha de conexão com a API (${baseUrl}). Verifique se o backend está rodando.`);
-        } else {
-          mostrarEstado('erro', e.message);
-        }
+        $('secao-progresso').classList.add('hidden');
+        if (e.message === 'cancelado') mostrarEstado('cancelado', 'Envio cancelado. As notas já aprovadas foram preservadas.');
+        else if (e.name === 'AbortError') mostrarEstado('timeout', 'O processamento excedeu o tempo limite (4 min).');
+        else if (e instanceof TypeError) mostrarEstado('erro', `Falha de conexão com a API (${baseUrl}). Verifique se o backend está rodando.`);
+        else mostrarEstado('erro', e.message);
       } finally {
-        state.processando = false;
         $('btn-processar').disabled = !state.arquivo;
       }
     }
 
-    function setProgresso(pct) {
-      $('progresso-barra').style.width = `${pct}%`;
-      $('progresso-pct').textContent = Math.round(pct);
-    }
+    function setProgresso(pct) { $('progresso-barra').style.width = `${pct}%`; $('progresso-pct').textContent = Math.round(pct); }
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    function resetarProgresso() {
-      $('progresso').classList.add('hidden');
-      $('btn-processar').disabled = !state.arquivo;
-    }
-
     function mostrarEstado(tipo, msg) {
-      const el = $('estado');
-      el.classList.remove('hidden');
+      const el = $('estado'); el.classList.remove('hidden');
       const cores = { erro: 'bg-red-50 border-red-200 text-red-700', timeout: 'bg-amber-50 border-amber-200 text-amber-700', cancelado: 'bg-gray-50 border-gray-200 text-gray-600' };
       el.innerHTML = `<div class="${cores[tipo] || cores.erro} border rounded-xl p-4 text-sm font-medium">${msg}</div>`;
     }
 
     function mostrarErroEstrutural(relatorio) {
-      $('progresso').classList.add('hidden');
       $('estado').classList.remove('hidden');
       const tipos = Object.entries(relatorio.por_tipo).map(([t, q]) => `<span class="inline-block bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-xs font-semibold mr-1">${t}: ${q}</span>`).join('');
       const linhas = relatorio.erros.slice(0, 20).map((e) => `<tr><td class="py-1 pr-3 tabular">${e.linha}</td><td class="py-1 pr-3">${e.tipo}</td><td class="py-1">${e.mensagem}</td></tr>`).join('');
       $('estado').innerHTML = `
         <div class="bg-red-50 border border-red-200 rounded-xl p-5">
-          <h3 class="font-semibold text-red-700 mb-2">Erros de estrutura encontrados (${relatorio.total_erros})</h3>
+          <h3 class="font-semibold text-red-700 mb-2">O arquivo não pôde ser processado</h3>
+          <p class="text-sm text-gray-600 mb-2">Encontramos ${relatorio.total_erros} erro(s) de estrutura. Corrija conforme abaixo.</p>
           <div class="mb-3">${tipos}</div>
-          <div class="overflow-x-auto text-xs"><table class="w-full">${linhas}</table></div>
-          <button id="btn-baixar-erros" class="mt-3 bg-red-600 text-white font-medium px-4 py-2 rounded-lg text-sm">⬇ Baixar CSV dos registros com erro</button>
+          <div class="overflow-x-auto text-xs mb-3"><table class="w-full">${linhas}</table></div>
+          <div class="flex gap-2">
+            <button id="btn-baixar-erros" class="bg-red-600 text-white font-medium px-4 py-2 rounded-lg text-sm">⬇ Baixar CSV dos erros</button>
+            <button id="btn-tentar-novo" class="bg-white border border-kp-borda text-gray-600 font-medium px-4 py-2 rounded-lg text-sm">Tentar novo upload</button>
+          </div>
         </div>`;
       $('btn-baixar-erros').addEventListener('click', () => baixarCsvErrosEstruturais(relatorio));
+      $('btn-tentar-novo').addEventListener('click', () => { $('estado').classList.add('hidden'); $('arquivo').click(); });
     }
 
     function baixarCsvErrosEstruturais(relatorio) {
       const linhas = relatorio.erros.map((e) => `${e.conteudo || ''};"${e.tipo}: ${e.mensagem.replace(/"/g, "'")}"`);
-      const csv = `${relatorio.cabecalho};MOTIVO_ERRO\n` + linhas.join('\n');
-      baixarCsv(csv, 'erros_estrutura.csv');
+      baixarCsv(`${relatorio.cabecalho};MOTIVO_ERRO\n` + linhas.join('\n'), 'erros_estrutura.csv');
     }
 
-    // ---------- Renderização da aba de análise ----------
-    function renderAnalise(dados) {
+    // ---------- Resultados ----------
+    function renderResultados(dados) {
       const r = dados.resumo || {};
       $('hero-total').textContent = r.total_notas ?? state.notas.length;
       $('hero-aprovadas').textContent = r.aprovadas ?? 0;
       $('hero-recusadas').textContent = r.recusadas ?? 0;
+
+      // Bruto aprovado e desconto total (calculados no cliente)
+      const aprovadas = state.notas.filter((n) => n.aprovada);
+      const brutoAprovado = aprovadas.reduce((acc, n) => acc + Number(n.valor_nominal || 0), 0);
+      const descontoTotal = aprovadas.reduce((acc, n) => acc + (Number(n.valor_nominal || 0) - Number(n.valor_liquido || 0)), 0);
+      $('hero-bruto').textContent = 'R$ ' + fmt(brutoAprovado);
+      $('hero-desconto').textContent = 'R$ ' + fmt(descontoTotal);
       $('hero-liquido').textContent = 'R$ ' + fmt(r.total_liquido);
 
       renderDiagnostico();
       renderFiltros();
       renderTabela();
+      $('secao-resultados').classList.remove('hidden');
+      $('secao-resultados').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     const CATEGORIAS = {
-      'PRAZO_MAXIMO': { nome: 'Prazos', desc: 'notas com vencimento acima do limite de 180 dias' },
-      'SITUACAO_CADASTRAL_SACADO': { nome: 'Situação Cadastral', desc: 'notas com CNPJ irregular' },
-      'VALOR_MINIMO': { nome: 'Valor Mínimo', desc: 'notas abaixo do piso de R$ 100,00' },
-      'TIPO_RECEBIVEL': { nome: 'Tipo de Recebível', desc: 'tipos não elegíveis (Cheque, CCB, Nota Comercial)' },
-      'CONCENTRACAO_MAXIMA_SACADO': { nome: 'Concentração', desc: 'sacado acima de 10% do fundo' },
-      'ERR_STOCK_ALREADY_SOLD': { nome: 'Título já negociado', desc: 'notas já adquiridas anteriormente' },
-      'ERR_BATCH_DUPLICATE': { nome: 'Duplicidade', desc: 'notas repetidas no próprio lote' },
+      'PRAZO_MAXIMO': { nome: 'Prazo acima do limite', desc: 'vencimento acima de 180 dias' },
+      'SITUACAO_CADASTRAL_SACADO': { nome: 'Situação cadastral do CNPJ', desc: 'CNPJ irregular na Receita Federal' },
+      'VALOR_MINIMO': { nome: 'Valor abaixo do mínimo', desc: 'abaixo do piso de R$ 100,00' },
+      'TIPO_RECEBIVEL': { nome: 'Tipo de recebível', desc: 'Cheque, CCB ou Nota Comercial' },
+      'CONCENTRACAO_MAXIMA_SACADO': { nome: 'Concentração do sacado', desc: 'acima de 10% do fundo' },
+      'ERR_STOCK_ALREADY_SOLD': { nome: 'Título já negociado', desc: 'já adquirido anteriormente' },
+      'ERR_BATCH_DUPLICATE': { nome: 'Duplicidade', desc: 'repetido no próprio lote' },
     };
 
     function renderDiagnostico() {
       const contagem = {};
       state.notas.forEach((n) => (n.motivos || []).forEach((m) => { contagem[m] = (contagem[m] || 0) + 1; }));
-
       const html = Object.entries(CATEGORIAS)
         .filter(([codigo]) => contagem[codigo])
         .map(([codigo, cat]) => `
@@ -503,47 +433,32 @@
             <p class="text-xs text-gray-400 mb-3">${cat.desc}</p>
             <div class="flex gap-2">
               <button data-filtro-motivo="${codigo}" class="btn-filtro-motivo text-xs text-kp-institucional font-medium hover:underline">Filtrar na Tabela</button>
-              <button data-baixar-motivo="${codigo}" class="btn-baixar-motivo text-xs text-kp-institucional font-medium hover:underline">Baixar CSV</button>
+              <button data-baixar-motivo="${codigo}" class="btn-baixar-motivo text-xs text-kp-institucional font-medium hover:underline">Baixar CSV deste grupo</button>
             </div>
-          </div>`)
-        .join('');
-
+          </div>`).join('');
       $('diagnostico').innerHTML = html || '<p class="text-sm text-gray-500 col-span-3">Nenhuma recusa encontrada.</p>';
-
-      document.querySelectorAll('.btn-filtro-motivo').forEach((b) => b.addEventListener('click', () => { filtrarPorMotivo(b.dataset.filtroMotivo); }));
-      document.querySelectorAll('.btn-baixar-motivo').forEach((b) => b.addEventListener('click', () => { baixarPorMotivo(b.dataset.baixarMotivo); }));
+      document.querySelectorAll('.btn-filtro-motivo').forEach((b) => b.addEventListener('click', () => { state.filtro = 'motivo:' + b.dataset.filtroMotivo; state.pagina = 1; renderTabela(); }));
+      document.querySelectorAll('.btn-baixar-motivo').forEach((b) => b.addEventListener('click', () => baixarPorMotivo(b.dataset.baixarMotivo)));
     }
 
     function renderFiltros() {
       const aprovadas = state.notas.filter((n) => n.aprovada).length;
-      const recusadas = state.notas.length - aprovadas;
       $('f-todas').textContent = state.notas.length;
       $('f-aprovadas').textContent = aprovadas;
-      $('f-recusadas').textContent = recusadas;
+      $('f-recusadas').textContent = state.notas.length - aprovadas;
     }
 
-    // Filtros
     document.querySelectorAll('.filtro-btn').forEach((b) => b.addEventListener('click', () => {
-      state.filtro = b.dataset.filtro;
-      state.pagina = 1;
+      state.filtro = b.dataset.filtro; state.pagina = 1;
       document.querySelectorAll('.filtro-btn').forEach((x) => { x.classList.remove('bg-kp-profundo','text-white'); x.classList.add('bg-kp-fundo','text-gray-600'); });
       b.classList.add('bg-kp-profundo','text-white'); b.classList.remove('bg-kp-fundo','text-gray-600');
       renderTabela();
     }));
 
-    function filtrarPorMotivo(motivo) {
-      state.filtro = 'motivo:' + motivo;
-      state.pagina = 1;
-      renderTabela();
-    }
-
     function notasFiltradas() {
       if (state.filtro === 'aprovadas') return state.notas.filter((n) => n.aprovada);
       if (state.filtro === 'recusadas') return state.notas.filter((n) => !n.aprovada);
-      if (state.filtro.startsWith('motivo:')) {
-        const m = state.filtro.split(':')[1];
-        return state.notas.filter((n) => (n.motivos || []).includes(m));
-      }
+      if (state.filtro.startsWith('motivo:')) { const m = state.filtro.split(':')[1]; return state.notas.filter((n) => (n.motivos || []).includes(m)); }
       return state.notas;
     }
 
@@ -551,27 +466,13 @@
       const filtradas = notasFiltradas();
       const totalPaginas = Math.max(1, Math.ceil(filtradas.length / state.linhasPagina));
       if (state.pagina > totalPaginas) state.pagina = totalPaginas;
-
       const inicio = (state.pagina - 1) * state.linhasPagina;
       const pagina = filtradas.slice(inicio, inicio + state.linhasPagina);
 
-      // Renderiza SOMENTE a página atual (server-side simulation)
       $('tabela-corpo').innerHTML = pagina.map((n) => {
-        const aprovada = n.aprovada;
-        const badge = aprovada
-          ? '<span class="inline-block bg-green-100 text-green-700 rounded-full px-2 py-0.5 text-xs font-semibold">Aprovada</span>'
-          : '<span class="inline-block bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-xs font-semibold">Recusada</span>';
-        const cnpjBadge = badgeCadastral(n);
-        const motivo = (n.motivos || []).map((m) => CATEGORIAS[m]?.nome || m).join(', ');
-        return `<tr class="border-b border-kp-borda hover:bg-kp-fundo cursor-pointer" data-nf="${n.nu_documento}">
-          <td class="py-2.5 pr-3 font-medium tabular">${n.nu_documento}</td>
-          <td class="py-2.5 pr-3">${n.nome_sacado || '—'}</td>
-          <td class="py-2.5 pr-3 tabular">${fmtCnpj(n.doc_sacado)} ${cnpjBadge}</td>
-          <td class="py-2.5 pr-3 tabular">${n.data_vencimento || '—'}</td>
-          <td class="py-2.5 pr-3 text-right tabular font-medium">R$ ${fmt(n.valor_nominal)}</td>
-          <td class="py-2.5 pr-3">${badge}</td>
-          <td class="py-2.5 text-xs ${aprovada ? 'text-gray-400' : 'text-red-600'}">${aprovada ? '—' : motivo}</td>
-        </tr>`;
+        const editando = editandoNf === n.nu_documento;
+        if (editando) return linhaEditavel(n);
+        return linhaNormal(n);
       }).join('');
 
       $('linhas-dom').textContent = `${pagina.length} no DOM`;
@@ -579,48 +480,204 @@
       $('pag-anterior').disabled = state.pagina <= 1;
       $('pag-proxima').disabled = state.pagina >= totalPaginas;
 
-      // Clique na linha -> barra financeira
-      document.querySelectorAll('#tabela-corpo tr').forEach((tr) => tr.addEventListener('click', () => mostrarBarraFinanceira(tr.dataset.nf)));
+      document.querySelectorAll('#tabela-corpo tr[data-nf]').forEach((tr) => {
+        tr.addEventListener('click', () => selecionarNota(tr.dataset.nf));
+      });
+      document.querySelectorAll('.btn-editar').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); iniciarEdicao(b.dataset.nf); }));
+      document.querySelectorAll('.btn-cancelar-edicao').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); cancelarEdicao(); }));
+      document.querySelectorAll('.btn-revalidar').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); revalidarNota(b.dataset.nf); }));
     }
 
-    function badgeCadastral(n) {
+    function linhaNormal(n) {
+      const badge = n.aprovada
+        ? '<span class="inline-block bg-green-100 text-green-700 rounded-full px-2 py-0.5 text-xs font-semibold">Aprovada</span>'
+        : '<span class="inline-block bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-xs font-semibold">Recusada</span>';
+      const acoes = n.aprovada
+        ? '<span class="text-xs text-gray-400">—</span>'
+        : `<button data-nf="${n.nu_documento}" class="btn-editar text-xs text-kp-institucional font-medium hover:underline">Editar e Corrigir</button>`;
+      return `<tr class="border-b border-kp-borda hover:bg-kp-fundo cursor-pointer" data-nf="${n.nu_documento}">
+        <td class="py-2.5 pr-3 font-medium tabular">${n.nu_documento}</td>
+        <td class="py-2.5 pr-3">${n.nome_sacado || '—'}</td>
+        <td class="py-2.5 pr-3 tabular">${fmtCnpj(n.doc_sacado)}<div>${situacaoBadge(n)}</div></td>
+        <td class="py-2.5 pr-3 text-right tabular">${n.data_vencimento || '—'}</td>
+        <td class="py-2.5 pr-3 text-right tabular font-medium">R$ ${fmt(n.valor_nominal)}</td>
+        <td class="py-2.5 pr-3">${badge}</td>
+        <td class="py-2.5">${acoes}</td>
+      </tr>`;
+    }
+
+    function linhaEditavel(n) {
+      return `<tr class="border-b border-kp-borda bg-green-50/50 linha-editavel" data-nf="${n.nu_documento}">
+        <td class="py-2.5 pr-3 font-medium tabular">${n.nu_documento}</td>
+        <td class="py-2.5 pr-3"><input id="ed-sacado" value="${n.nome_sacado || ''}" /></td>
+        <td class="py-2.5 pr-3"><input id="ed-cnpj" value="${fmtCnpj(n.doc_sacado)}" /></td>
+        <td class="py-2.5 pr-3"><input id="ed-vencimento" value="${n.data_vencimento || ''}" /></td>
+        <td class="py-2.5 pr-3"><input id="ed-valor" value="${String(n.valor_nominal).replace('.', ',')}" /></td>
+        <td class="py-2.5 pr-3"><span class="text-xs text-gray-500">Revalidando…</span></td>
+        <td class="py-2.5">
+          <button data-nf="${n.nu_documento}" class="btn-revalidar text-xs text-white bg-kp-institucional px-2 py-1 rounded">Revalidar</button>
+          <button data-nf="${n.nu_documento}" class="btn-cancelar-edicao text-xs text-gray-500 px-2 py-1 rounded hover:bg-kp-fundo">Cancelar</button>
+        </td>
+      </tr>`;
+    }
+
+    function situacaoBadge(n) {
+      // Situação cadastral: deriva de motivos + validação do CNPJ
+      const cnpj = (n.doc_sacado || '').replace(/\D/g, '');
+      if (cnpj.length === 14 && !cnpjValido(cnpj)) {
+        return '<span class="inline-block situacao-invalido rounded px-1.5 py-0.5 text-[10px] font-bold">Inválido</span>';
+      }
       const irregular = (n.motivos || []).includes('SITUACAO_CADASTRAL_SACADO');
-      if (irregular) return '<span class="ml-1 inline-block bg-red-100 text-red-700 rounded px-1.5 py-0.5 text-[10px] font-bold">IRREGULAR</span>';
-      return '<span class="ml-1 inline-block bg-green-100 text-green-700 rounded px-1.5 py-0.5 text-[10px] font-bold">ATIVO</span>';
+      if (irregular) return '<span class="inline-block situacao-inapto rounded px-1.5 py-0.5 text-[10px] font-bold">Inapto</span>';
+      return '<span class="inline-block situacao-ativo rounded px-1.5 py-0.5 text-[10px] font-bold">Ativo</span>';
     }
 
-    function mostrarBarraFinanceira(nf) {
+    // ---------- Seleção: banner (recusada) ou barra (aprovada) ----------
+    function selecionarNota(nf) {
       const n = state.notas.find((x) => x.nu_documento === nf);
       if (!n) return;
+      if (n.aprovada) mostrarBarraFinanceira(n);
+      else mostrarBanner(n);
+    }
+
+    function mostrarBanner(n) {
+      $('barra-financeira').classList.add('hidden');
+      const motivos = (n.motivos || []).map((m) => {
+        const cat = CATEGORIAS[m];
+        const detalhe = detalheMotivo(n, m);
+        return { codigo: m, nome: cat?.nome || m, detalhe };
+      });
+      const lista = motivos.map((m) => `<li class="mb-1"><span class="font-medium">${m.nome}</span> · ${m.detalhe}</li>`).join('');
+      $('banner').classList.remove('hidden');
+      $('banner').innerHTML = `
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h4 class="font-semibold text-amber-800 mb-2">NF ${n.nu_documento} — Motivo da recusa</h4>
+          <ul class="text-sm text-gray-700 space-y-1">${lista}</ul>
+          <p class="text-xs text-gray-500 mt-3">Oriente-se pela regra configurada no fundo para corrigir esta nota.</p>
+        </div>`;
+    }
+
+    function detalheMotivo(n, m) {
+      switch (m) {
+        case 'PRAZO_MAXIMO': return `vence em ${n.prazo_dias} dias; o limite configurado é 180 dias.`;
+        case 'VALOR_MINIMO': return `valor de R$ ${fmt(n.valor_nominal)}; o piso é R$ 100,00.`;
+        case 'SITUACAO_CADASTRAL_SACADO': return `o CNPJ ${fmtCnpj(n.doc_sacado)} encontra-se irregular; o fundo exige situação 'Ativo'.`;
+        case 'TIPO_RECEBIVEL': return `tipo '${n.tipo_recebivel}' não é elegível (apenas Duplicata e Duplicata de Serviço).`;
+        case 'CONCENTRACAO_MAXIMA_SACADO': return `o sacado ultrapassou o limite de concentração do fundo.`;
+        case 'ERR_STOCK_ALREADY_SOLD': return `esta nota já foi adquirida anteriormente.`;
+        case 'ERR_BATCH_DUPLICATE': return `este documento aparece mais de uma vez no lote.`;
+        default: return '';
+      }
+    }
+
+    function mostrarBarraFinanceira(n) {
+      $('banner').classList.add('hidden');
       const aprovadas = state.notas.filter((x) => x.aprovada).length;
-      const descontoTotal = state.notas.reduce((acc, x) => acc + (x.valor_nominal - x.valor_liquido), 0);
+      const descontoTotal = state.notas.reduce((acc, x) => acc + (Number(x.valor_nominal || 0) - Number(x.valor_liquido || 0)), 0);
       $('barra-financeira').classList.remove('hidden');
       $('barra-financeira').innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div><p class="text-gray-500 text-xs">Nota em foco</p><p class="font-semibold tabular">${n.nu_documento}</p></div>
+          <div><p class="text-gray-500 text-xs">Nota</p><p class="font-semibold tabular">${n.nu_documento}</p></div>
           <div><p class="text-gray-500 text-xs">Valor de face</p><p class="font-semibold tabular">R$ ${fmt(n.valor_nominal)}</p></div>
-          <div><p class="text-gray-500 text-xs">Desconto individual</p><p class="font-semibold tabular">R$ ${fmt(n.valor_nominal - n.valor_liquido)}</p></div>
-          <div><p class="text-gray-500 text-xs">Total a receber</p><p class="font-semibold tabular text-kp-institucional">R$ ${fmt($('hero-liquido').textContent.replace('R$ ', '').replace(/\./g,'').replace(',', '.'))}</p></div>
+          <div><p class="text-gray-500 text-xs">Desconto aplicado</p><p class="font-semibold tabular">R$ ${fmt(n.valor_nominal - n.valor_liquido)}</p></div>
+          <div><p class="text-gray-500 text-xs">Valor líquido</p><p class="font-semibold tabular text-kp-institucional">R$ ${fmt(n.valor_liquido)}</p></div>
         </div>
-        <div class="mt-3 pt-3 border-t border-kp-borda flex flex-wrap gap-4 text-xs text-gray-500">
+        <p class="mt-3 text-sm text-gray-600">Simulação · NF ${n.nu_documento} → <strong class="tabular">R$ ${fmt(n.valor_liquido)}</strong></p>
+        <div class="mt-2 pt-3 border-t border-kp-borda flex flex-wrap gap-4 text-xs text-gray-500">
           <span>Total de notas: <strong class="tabular">${state.notas.length}</strong></span>
           <span>Aprovadas: <strong class="tabular text-kp-institucional">${aprovadas}</strong></span>
           <span>Desconto total: <strong class="tabular">R$ ${fmt(descontoTotal)}</strong></span>
         </div>`;
     }
 
-    // Paginação
+    // ---------- Edição inline (client-side) ----------
+    function iniciarEdicao(nf) {
+      editandoNf = nf;
+      renderTabela();
+    }
+    function cancelarEdicao() {
+      editandoNf = null;
+      renderTabela();
+    }
+
+    function revalidarNota(nf) {
+      const n = state.notas.find((x) => x.nu_documento === nf);
+      if (!n) return;
+      const sacado = $('ed-sacado').value.trim();
+      const cnpj = ($('ed-cnpj').value || '').replace(/\D/g, '');
+      const vencimento = $('ed-vencimento').value.trim();
+      const valorStr = $('ed-valor').value.trim().replace(',', '.');
+
+      // Validações
+      if (!sacado) { alert('O sacado é obrigatório.'); return; }
+      if (cnpj.length !== 14 || !cnpjValido(cnpj)) { alert('CNPJ inválido. Verifique os dígitos verificadores.'); return; }
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(vencimento)) { alert('Data de vencimento deve estar em dd/mm/aaaa.'); return; }
+      const valor = parseFloat(valorStr);
+      if (isNaN(valor) || valor <= 0) { alert('Valor nominal inválido.'); return; }
+
+      // Revalida as regras de negócio no cliente
+      const novosMotivos = [];
+      if (!['Duplicata', 'Duplicata de Serviço'].includes(n.tipo_recebivel)) novosMotivos.push('TIPO_RECEBIVEL');
+      if (n.prazo_dias > 180) novosMotivos.push('PRAZO_MAXIMO');
+      if (valor < 100) novosMotivos.push('VALOR_MINIMO');
+
+      // Atualiza a nota
+      n.nome_sacado = sacado;
+      n.doc_sacado = cnpj;
+      n.data_vencimento = vencimento;
+      n.valor_nominal = valor;
+      n.motivos = novosMotivos;
+      n.aprovada = novosMotivos.length === 0;
+      n.corrigida = true;
+      if (n.aprovada) n.valor_liquido = valor * 0.98; // taxa de desconto de 2%
+
+      editandoNf = null;
+      recalcularTotais();
+      renderDiagnostico();
+      renderFiltros();
+      renderTabela();
+    }
+
+    function recalcularTotais() {
+      const aprovadas = state.notas.filter((n) => n.aprovada);
+      const brutoAprovado = aprovadas.reduce((acc, n) => acc + Number(n.valor_nominal || 0), 0);
+      const descontoTotal = aprovadas.reduce((acc, n) => acc + (Number(n.valor_nominal || 0) - Number(n.valor_liquido || 0)), 0);
+      const liquido = aprovadas.reduce((acc, n) => acc + Number(n.valor_liquido || 0), 0);
+      $('hero-aprovadas').textContent = aprovadas.length;
+      $('hero-recusadas').textContent = state.notas.length - aprovadas.length;
+      $('hero-bruto').textContent = 'R$ ' + fmt(brutoAprovado);
+      $('hero-desconto').textContent = 'R$ ' + fmt(descontoTotal);
+      $('hero-liquido').textContent = 'R$ ' + fmt(liquido);
+    }
+
+    // ---------- Validação de CNPJ (dígitos verificadores) ----------
+    function cnpjValido(cnpj) {
+      if (!/^\d{14}$/.test(cnpj)) return false;
+      if (/^(\d)\1{13}$/.test(cnpj)) return false;
+      const calc = (base) => {
+        const pesos = base.length === 12 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2];
+        let soma = 0;
+        for (let i = 0; i < base.length; i++) soma += parseInt(base[i]) * pesos[i];
+        const resto = soma % 11;
+        return resto < 2 ? 0 : 11 - resto;
+      };
+      const d1 = calc(cnpj.slice(0, 12));
+      const d2 = calc(cnpj.slice(0, 13));
+      return d1 === parseInt(cnpj[12]) && d2 === parseInt(cnpj[13]);
+    }
+
+    // ---------- Paginação ----------
     $('pag-anterior').addEventListener('click', () => { state.pagina--; renderTabela(); });
     $('pag-proxima').addEventListener('click', () => { state.pagina++; renderTabela(); });
     $('linhas-pagina').addEventListener('change', (e) => { state.linhasPagina = parseInt(e.target.value); state.pagina = 1; renderTabela(); });
 
-    // Exportação
+    // ---------- Exportação ----------
     $('btn-baixar-rejeitadas').addEventListener('click', () => baixarPorMotivo(null));
 
     function baixarPorMotivo(motivo) {
       const recusadas = state.notas.filter((n) => !n.aprovada && (!motivo || (n.motivos || []).includes(motivo)));
-      const header = 'NOTA;SACADO;CNPJ;VENCIMENTO;VALOR_NOMINAL;MOTIVO_RECUSA';
-      const linhas = recusadas.map((n) => `${n.nu_documento};${n.nome_sacado || ''};${n.doc_sacado || ''};${n.data_vencimento || ''};${String(n.valor_nominal).replace('.', ',')};"${(n.motivos || []).join(' | ')}"`);
+      const header = 'NOTA;SACADO;CNPJ;VENCIMENTO;VALOR_NOMINAL;STATUS;MOTIVO_RECUSA';
+      const linhas = recusadas.map((n) => `${n.nu_documento};${n.nome_sacado || ''};${fmtCnpj(n.doc_sacado)};${n.data_vencimento || ''};${String(n.valor_nominal).replace('.', ',')};Recusada;"${(n.motivos || []).join(' | ')}"`);
       baixarCsv([header, ...linhas].join('\n'), motivo ? `recusadas_${motivo.toLowerCase()}.csv` : 'recusadas_todas.csv');
     }
 
@@ -634,9 +691,7 @@
     }
 
     // ---------- Helpers ----------
-    function fmt(v) {
-      return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
+    function fmt(v) { return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function fmtCnpj(cnpj) {
       const d = (cnpj || '').replace(/\D/g, '');
       if (d.length !== 14) return cnpj || '—';
@@ -645,7 +700,8 @@
 
     // Confirmação
     $('btn-confirmar').addEventListener('click', () => {
-      alert('Lote aprovado confirmado para antecipação. (Integração com assinatura/cessão pode ser adicionada.)');
+      const aprovadas = state.notas.filter((n) => n.aprovada).length;
+      alert(`Confirmação da antecipação de ${aprovadas} títulos aprovados. (Integração com assinatura/cessão pode ser adicionada.)`);
     });
   </script>
 </body>
