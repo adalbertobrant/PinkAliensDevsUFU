@@ -34,6 +34,8 @@ struct Config {
     double taxa_desconto = 0.02;
     std::unordered_set<std::string> tipos_aceitos;
     std::unordered_set<std::string> situacoes_irregulares;
+    // Códigos dos validadores com "ativo": true (lidos do JSON)
+    std::unordered_set<std::string> validadores_ativos;
 };
 
 inline std::string trim(const std::string& s) {
@@ -83,26 +85,99 @@ public:
     std::unordered_map<std::string, std::string> situacao; // cnpj_normalizado -> situacao
 
     void carregar_config(const std::string& json_path) {
+        // Padrões seguros (usados se o JSON não existir ou estiver ilegível)
         cfg.tipos_aceitos = {"Duplicata", "Duplicata de Serviço"};
         cfg.situacoes_irregulares = {"BAIXADA", "INAPTA", "SUSPENSA"};
+        cfg.validadores_ativos = {"TIPO_RECEBIVEL", "PRAZO_MAXIMO", "VALOR_MINIMO",
+                                  "CONCENTRACAO_MAXIMA_SACADO", "SITUACAO_CADASTRAL_SACADO",
+                                  "TAXA_DESCONTO"};
+
         std::ifstream f(json_path);
         if (!f.is_open()) return;
         std::stringstream ss; ss << f.rdbuf();
         std::string j = ss.str();
-        // extrair limites via busca simples (evita dependencia de jsoncpp)
-        auto find_num = [&](const std::string& key, double def) -> double {
-            size_t p = j.find(key);
-            if (p == std::string::npos) return def;
-            size_t c = j.find(':', p);
-            if (c == std::string::npos) return def;
-            size_t e = j.find_first_of(",}]", c);
-            std::string v = trim(j.substr(c+1, e-c-1));
-            try { return std::stod(v); } catch (...) { return def; }
-        };
-        cfg.prazo_maximo_dias = (int)find_num("\"limite_dias\"", 180.0);
-        cfg.valor_minimo = find_num("\"limite_minimo\"", 100.0);
-        cfg.concentracao_percentual = find_num("\"limite_percentual\"", 10.0);
-        cfg.taxa_desconto = find_num("\"taxa\"", 0.02);
+
+        cfg.validadores_ativos.clear();
+
+        // Percorre cada objeto "{ ... }" do array de validadores
+        size_t pos = 0;
+        while (true) {
+            size_t open = j.find('{', pos);
+            if (open == std::string::npos) break;
+            size_t close = j.find('}', open);
+            if (close == std::string::npos) break;
+            std::string bloco = j.substr(open, close - open + 1);
+
+            // codigo
+            std::string codigo;
+            size_t pc = bloco.find("\"codigo\"");
+            if (pc != std::string::npos) {
+                size_t q1 = bloco.find('"', pc + 8);
+                size_t q2 = q1 != std::string::npos ? bloco.find('"', q1 + 1) : std::string::npos;
+                if (q1 != std::string::npos && q2 != std::string::npos)
+                    codigo = bloco.substr(q1 + 1, q2 - q1 - 1);
+            }
+
+            // ativo
+            bool ativo = true;
+            size_t pa = bloco.find("\"ativo\"");
+            if (pa != std::string::npos) {
+                ativo = bloco.find("true", pa) != std::string::npos;
+            }
+
+            if (!codigo.empty() && ativo) cfg.validadores_ativos.insert(codigo);
+
+            // helper: número por chave dentro do bloco
+            auto num = [&](const std::string& key, double def) -> double {
+                size_t p = bloco.find(key);
+                if (p == std::string::npos) return def;
+                size_t c = bloco.find(':', p);
+                if (c == std::string::npos) return def;
+                size_t e = bloco.find_first_of(",}]", c);
+                std::string v = trim(bloco.substr(c + 1, e - c - 1));
+                try { return std::stod(v); } catch (...) { return def; }
+            };
+
+            // helper: lista de strings por chave dentro do bloco
+            auto arr = [&](const std::string& key) -> std::unordered_set<std::string> {
+                std::unordered_set<std::string> out;
+                size_t p = bloco.find(key);
+                if (p == std::string::npos) return out;
+                size_t ob = bloco.find('[', p);
+                size_t cb = ob != std::string::npos ? bloco.find(']', ob) : std::string::npos;
+                if (ob == std::string::npos || cb == std::string::npos) return out;
+                std::string content = bloco.substr(ob + 1, cb - ob - 1);
+                size_t s = 0;
+                while (true) {
+                    size_t q1 = content.find('"', s);
+                    if (q1 == std::string::npos) break;
+                    size_t q2 = content.find('"', q1 + 1);
+                    if (q2 == std::string::npos) break;
+                    out.insert(content.substr(q1 + 1, q2 - q1 - 1));
+                    s = q2 + 1;
+                }
+                return out;
+            };
+
+            // Aplica parâmetros conforme o código do validador
+            if (codigo == "TIPO_RECEBIVEL") {
+                auto v = arr("\"tipos_aceitos\"");
+                if (!v.empty()) cfg.tipos_aceitos = v;
+            } else if (codigo == "PRAZO_MAXIMO") {
+                cfg.prazo_maximo_dias = (int)num("\"limite_dias\"", cfg.prazo_maximo_dias);
+            } else if (codigo == "VALOR_MINIMO") {
+                cfg.valor_minimo = num("\"limite_minimo\"", cfg.valor_minimo);
+            } else if (codigo == "CONCENTRACAO_MAXIMA_SACADO") {
+                cfg.concentracao_percentual = num("\"limite_percentual\"", cfg.concentracao_percentual);
+            } else if (codigo == "SITUACAO_CADASTRAL_SACADO") {
+                auto v = arr("\"situacoes_irregulares\"");
+                if (!v.empty()) cfg.situacoes_irregulares = v;
+            } else if (codigo == "TAXA_DESCONTO") {
+                cfg.taxa_desconto = num("\"taxa\"", cfg.taxa_desconto);
+            }
+
+            pos = close + 1;
+        }
     }
 
     void carregar_estoque(const std::string& path) {
@@ -205,28 +280,33 @@ public:
                 }
             }
             // TIPO_RECEBIVEL
-            if (!cfg.tipos_aceitos.count(n.tipo_recebivel)) {
+            if (cfg.validadores_ativos.count("TIPO_RECEBIVEL") &&
+                !cfg.tipos_aceitos.count(n.tipo_recebivel)) {
                 n.motivos.push_back("TIPO_RECEBIVEL");
             }
             // PRAZO_MAXIMO
-            if (n.prazo_dias > cfg.prazo_maximo_dias) {
+            if (cfg.validadores_ativos.count("PRAZO_MAXIMO") &&
+                n.prazo_dias > cfg.prazo_maximo_dias) {
                 n.motivos.push_back("PRAZO_MAXIMO");
             }
             // VALOR_MINIMO
-            if (n.valor_nominal < cfg.valor_minimo) {
+            if (cfg.validadores_ativos.count("VALOR_MINIMO") &&
+                n.valor_nominal < cfg.valor_minimo) {
                 n.motivos.push_back("VALOR_MINIMO");
             }
             // CONCENTRACAO_MAXIMA_SACADO
             std::string raiz = so_digitos(n.doc_sacado).substr(0, 8);
             double ft = fundo_total[n.doc_fundo];
             double cv = conc[n.doc_fundo + "|" + raiz];
-            if (ft > 0 && (cv / ft) * 100.0 > cfg.concentracao_percentual) {
+            if (cfg.validadores_ativos.count("CONCENTRACAO_MAXIMA_SACADO") &&
+                ft > 0 && (cv / ft) * 100.0 > cfg.concentracao_percentual) {
                 n.motivos.push_back("CONCENTRACAO_MAXIMA_SACADO");
             }
             // SITUACAO_CADASTRAL_SACADO
             std::string doc = so_digitos(n.doc_sacado);
             auto it = situacao.find(doc);
-            if (it != situacao.end() && cfg.situacoes_irregulares.count(it->second)) {
+            if (cfg.validadores_ativos.count("SITUACAO_CADASTRAL_SACADO") &&
+                it != situacao.end() && cfg.situacoes_irregulares.count(it->second)) {
                 n.motivos.push_back("SITUACAO_CADASTRAL_SACADO");
             }
 
