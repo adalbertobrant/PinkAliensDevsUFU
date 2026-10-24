@@ -234,6 +234,48 @@ Este erro significa que o **daemon do Docker Desktop não está rodando** — o 
 > docker compose up --build
 > ```
 
+#### `ActiveRecord::DatabaseConnectionError` (Rails não conecta no banco)
+
+> ⚠️ **Erro:**
+> ```
+> ActiveRecord::DatabaseConnectionError
+> There is an issue connecting with your hostname: 127.0.0.1.
+> Please check your database configuration and ensure there is a valid
+> connection to your database.
+> ```
+
+Este erro aparece quando o Rails **não consegue conectar no PostgreSQL** em `127.0.0.1:5432`. Na grande maioria das vezes, é o **mesmo problema do Docker Desktop** acima: o banco não está rodando. Ele costuma surgir quando você roda o Rails **fora** do Docker (`rails db:migrate`, `rails server`) sem antes subir o banco.
+
+**Causas mais comuns (na ordem):**
+
+1. **PostgreSQL não está rodando** — o contêiner `db` não foi iniciado.
+2. **Docker Desktop está fechado** — então o contêiner `db` não consegue subir.
+3. **Rodou `rails db:migrate` sem `rails db:create` antes** (o banco ainda não existe).
+
+**Solução passo a passo (Windows 11):**
+
+```powershell
+# 1. Abra o Docker Desktop e aguarde a baleia ficar verde.
+
+# 2. Suba SOMENTE o banco de dados:
+docker compose up -d db
+
+# 3. Aguarde alguns segundos até o PostgreSQL aceitar conexões.
+#    (pode confirmar repetindo até aparecer o contêiner "Up"):
+docker ps
+
+# 4. Crie o banco e rode as migrações:
+cd backend
+rails db:create db:migrate
+```
+
+> 💡 **Alternativa mais simples:** suba tudo de uma vez com `docker compose up --build` (sobe banco + backend juntos). Nesse caso, **não** rode `rails db:migrate` na sua máquina — as migrações devem rodar *dentro* do contêiner:
+> ```powershell
+> docker compose exec backend rails db:create db:migrate
+> ```
+
+> ⚠️ **Se preferir rodar o Rails localmente (sem Docker),** você precisa de um PostgreSQL instalado e rodando na própria máquina Windows (ex.: instalar o PostgreSQL 16 nativo e ajustar `POSTGRES_HOST`/`POSTGRES_PASSWORD` no `backend/.env`). O caminho com Docker é o recomendado.
+
 #### Outros erros de banco
 
 | Erro | Causa | Solução |
