@@ -61,6 +61,10 @@ PinkAliensDevsUFU/
 git clone https://github.com/adalbertobrant/PinkAliensDevsUFU.git
 cd PinkAliensDevsUFU
 
+# Configurar variáveis de ambiente (senhas NÃO vão para o git)
+cp .env.example .env
+# Edite .env e defina uma senha forte para POSTGRES_PASSWORD
+
 # Subir serviços
 docker-compose up --build
 
@@ -81,7 +85,7 @@ docker-compose exec backend rails db:create db:migrate
 # Configurar banco
 cd backend
 cp .env.example .env
-# Editar .env com suas configurações
+# Edite .env e defina uma senha forte para POSTGRES_PASSWORD
 
 # Instalar dependências
 bundle install
@@ -161,8 +165,26 @@ Para reportar problemas ou sugestões, abra uma issue em: https://github.com/ada
 
 ### Segurança
 - Sem chaves/segredos no código-fonte
+- **Senhas e segredos ficam apenas em `.env`** (arquivo ignorado pelo git — nunca commitar)
 - Logs estruturados sem dados sensíveis do CSV
 - Rate limiting configurado
 - CORS configurado
 - Validação de upload
 - Criptografia e boas práticas OWASP
+
+### Variáveis de Ambiente
+
+As senhas e segredos **não** ficam versionados. Use os arquivos de exemplo como modelo:
+
+| Arquivo | Objetivo |
+|---|---|
+| `.env.example` | Modelo para o `docker-compose` (Postgres + chaves de agentes) |
+| `backend/.env.example` | Modelo para o Rails (dotenv-rails carrega automaticamente) |
+
+```bash
+# Configure uma vez:
+cp .env.example .env           # e preencha POSTGRES_PASSWORD com senha forte
+cp backend/.env.example backend/.env
+```
+
+> O `backend/config/master.key` e os arquivos `.env` estão no `.gitignore` e nunca são commitados.

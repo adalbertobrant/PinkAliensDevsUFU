@@ -1,33 +1,58 @@
-# Env
+# =============================================================================
+# SEGREDOS — nunca commitar
+# =============================================================================
 .env
-.env.local
+.env.*
+!.env.example
 *.env
-!backend/.env.example
+!**/.env.example
 
-# Rails
+# Chaves do Rails
+**/config/master.key
+**/config/credentials/*.key
+*.key
+*.pem
+*.p12
+*.pfx
+
+# =============================================================================
+# Rails / Backend
+# =============================================================================
 backend/log/*
 backend/tmp/*
 backend/storage/*
+!backend/log/.keep
+!backend/tmp/.keep
 backend/*.sqlite3
 backend/db/*.sqlite3-*
+backend/public/assets/
 
-# C++ build
-cpp_core/*.o
-cpp_core/*.so
+# =============================================================================
+# C++ — artefatos de build
+# =============================================================================
 backend/ext/antecipe_core/*.o
 backend/ext/antecipe_core/*.so
 backend/ext/antecipe_core/Makefile
 backend/ext/antecipe_core/mkmf.log
+backend/lib/*.so
+cpp_core/*.o
+cpp_core/*.so
+*.o
 
-# Node
+# =============================================================================
+# Node / Frontend
+# =============================================================================
 frontend/node_modules/
 frontend/dist/
 frontend/.cache/
+node_modules/
 
-# OS
+# =============================================================================
+# OS / Editor
+# =============================================================================
 .DS_Store
 Thumbs.db
-
-# Secrets
-*.key
-*.pem
+*.swp
+*.swo
+.idea/
+.vscode/
