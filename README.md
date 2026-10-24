@@ -57,6 +57,17 @@ PinkAliensDevsUFU/
 
 #### Com Docker (Recomendado)
 
+**Windows 11 — use o script automático** (verifica o Docker, pede as credenciais, grava no `.env` e sobe tudo):
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup_docker_windows.ps1
+```
+
+> ⚠️ A senha do PostgreSQL é lida **somente na primeira subida** do banco. Se trocar a senha depois, rode antes `docker compose down -v` para recriar o volume.
+
+**Linux/macOS — manual:**
+
 ```bash
 # Clonar repositório
 git clone https://github.com/adalbertobrant/PinkAliensDevsUFU.git
@@ -67,10 +78,10 @@ cp .env.example .env
 # Edite .env e defina uma senha forte para POSTGRES_PASSWORD
 
 # Subir serviços
-docker-compose up --build
+docker compose up --build
 
 # Em outro terminal, executar migrations
-docker-compose exec backend rails db:create db:migrate
+docker compose exec backend rails db:create db:migrate
 ```
 
 #### Sem Docker (Linux)
