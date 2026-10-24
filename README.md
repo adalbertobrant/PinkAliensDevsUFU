@@ -136,6 +136,38 @@ O script executa, em ordem:
 
 > 💡 Se não quiser usar o script, siga o passo a passo **"Sem Docker (Linux)"** acima — funciona igual no Windows, bastando usar o PowerShell e instalar o Ruby via [RubyInstaller](https://rubyinstaller.org/) (com DevKit/MSYS2) e o PostgreSQL nativo para Windows.
 
+### Como Usar (via web / navegador)
+
+O sistema tem uma interface web simples (SPA) em `frontend/`. Para usar:
+
+**1. Suba o backend** (um dos caminhos abaixo):
+```bash
+# Via Docker (sobe banco + API):
+docker compose up --build
+
+# Ou local, sem Docker:
+cd backend && bundle exec rails server
+```
+
+**2. Sirva o frontend** (o `index.html` usa módulos ES, então precisa de um servidor HTTP estático — abrir direto com `file://` pode ser bloqueado pelo navegador):
+```bash
+# Opção A — Python (vem no Linux/macOS; no Windows use py ou o npx)
+cd frontend && python3 -m http.server 8080
+
+# Opção B — Node/npx
+cd frontend && npx serve .
+```
+Abra no navegador: **http://localhost:8080**
+
+**3. Use a aplicação:**
+1. Selecione um arquivo `.csv` de notas (formato abaixo).
+2. A aplicação valida a **estrutura**:
+   - Se houver erros (separador, data, decimal, cabeçalho), mostra um **relatório** com os erros e um botão **"Baixar CSV dos registros com erro"** para você corrigir.
+   - Se a estrutura estiver correta, envia automaticamente ao backend.
+3. O backend processa as **regras de negócio** e retorna a tabela de resultados: notas **Aprovadas** (com valor líquido) e **Recusadas** (com o motivo), além do **total a receber**.
+
+> 💡 O campo **"API"** na tela permite apontar para outro endereço do backend (padrão `http://localhost:3000`).
+
 ### API Endpoints
 
 - `GET  /api/v1/health` — health check
