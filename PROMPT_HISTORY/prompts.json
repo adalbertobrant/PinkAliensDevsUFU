@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2026-10-24T00:00:00Z",
+    "descricao": "Repositorio inicial com regras do hackathon",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "system",
+    "sha_commit": "da83def",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.00},
+    "quantidade_tokens": {"input": 0, "output": 0}
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-10-24T00:05:00Z",
+    "descricao": "Leitura completa do repositorio e entendimento do desafio Antecipe",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent-big-pickle",
+    "sha_commit": "da83def",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.01},
+    "quantidade_tokens": {"input": 45000, "output": 8500}
+  },
+  {
+    "id": 3,
+    "timestamp": "2026-10-24T00:15:00Z",
+    "descricao": "Definicao de arquitetura: Rails + Postgres, C++ nativo via FFI como extensao lib, frontend SPA separado, validacao estrutural CSV no frontend, processamento por chunks hash por nu_documento|doc_cedente, rate limit/cors/validacao upload, testes em ruby/c++, historico em PROMPT_HISTORY/prompts.json",
+    "site_acao": "/home/adalberto/git/PinkAliensDevsUFU",
+    "agente_responsavel": "opencode-agent-big-pickle",
+    "sha_commit": "da83def",
+    "avaliacao_custo": {"moeda": "USD", "valor": 0.015},
+    "quantidade_tokens": {"input": 55000, "output": 12000}
+  }
+]
