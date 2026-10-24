@@ -33,7 +33,7 @@ module Antecipe
         end
       end
 
-      def processar(csv_content, checar_integridade: true)
+      def processar(csv_content, checar_integridade: false)
         JSON.parse(processador.processar(csv_content, checar_integridade))
       end
     end
