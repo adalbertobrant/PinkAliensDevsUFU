@@ -8,6 +8,18 @@
 using namespace Rice;
 using namespace antecipe;
 
+// Escapa uma string para uso em JSON (aspas e barra invertida)
+static std::string json_esc(const std::string& s) {
+    std::string r;
+    r.reserve(s.size() + 8);
+    for (char c : s) {
+        if (c == '"') r += "\\\"";
+        else if (c == '\\') r += "\\\\";
+        else r += c;
+    }
+    return r;
+}
+
 class Processador {
 public:
     Processador() {}
@@ -38,9 +50,13 @@ public:
         for (auto& n : notas) {
             if (!first) out << ",";
             first = false;
-            out << "{\"nu_documento\":\"" << n.nu_documento
-                << "\",\"doc_cedente\":\"" << n.doc_cedente
-                << "\",\"nome_sacado\":\"" << n.nome_sacado
+            out << "{\"nu_documento\":\"" << json_esc(n.nu_documento)
+                << "\",\"doc_cedente\":\"" << json_esc(n.doc_cedente)
+                << "\",\"nome_cedente\":\"" << json_esc(n.nome_cedente)
+                << "\",\"nome_sacado\":\"" << json_esc(n.nome_sacado)
+                << "\",\"doc_sacado\":\"" << json_esc(n.doc_sacado)
+                << "\",\"tipo_recebivel\":\"" << json_esc(n.tipo_recebivel)
+                << "\",\"data_vencimento\":\"" << json_esc(n.data_vencimento)
                 << "\",\"valor_nominal\":" << n.valor_nominal
                 << ",\"prazo_dias\":" << n.prazo_dias
                 << ",\"aprovada\":" << (n.motivos.empty() ? "true" : "false")
@@ -48,7 +64,7 @@ public:
                 << ",\"motivos\":[";
             for (size_t j = 0; j < n.motivos.size(); j++) {
                 if (j) out << ",";
-                out << "\"" << n.motivos[j] << "\"";
+                out << "\"" << json_esc(n.motivos[j]) << "\"";
             }
             out << "]}";
         }

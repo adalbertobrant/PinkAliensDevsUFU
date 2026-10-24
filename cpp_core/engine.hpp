@@ -19,6 +19,7 @@ struct Nota {
     std::string doc_sacado;
     std::string tipo_recebivel;
     std::string doc_fundo;
+    std::string data_vencimento;   // dd/mm/aaaa (original)
     double valor_nominal = 0.0;
     long prazo_dias = 0; // vencimento - aquisicao
     // resultados
@@ -159,6 +160,7 @@ public:
             n.nu_documento = c[6];
             n.tipo_recebivel = c[7];
             n.valor_nominal = parse_valor(c[8]);
+            n.data_vencimento = c[9];
             long dv = data_para_dias(c[9]);
             long da = data_para_dias(c[10]);
             n.prazo_dias = dv - da;
