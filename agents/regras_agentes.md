@@ -1,71 +1,6 @@
 # regras do hacktoon
-
-
-"regras_entrega_edital": {
-"formato": "Repositório do GitHub",
-"prazo": "Até o encerramento do evento (18:00)",
-"itens_obrigatorios": [
 {
-"item": "Código-fonte",
-"descricao": "Código com a resolução do exercício proposto no evento."
-},
-{
-"item": "Registro de prompts",
-"descricao": "Arquivo com todos os prompts utilizados durante o desenvolvimento, em ordem cronológica, acompanhados da descrição do que foi feito com cada resposta."
-},
-{
-"item": "README estruturado",
-"descricao": "Manual com as instruções necessárias para subir a aplicação completa. O projeto cuja aplicação não puder ser executada seguindo as instruções do README será desclassificado."
-}
-]
-},
-"avaliacao": {
-"fases": 2,
-"fase_1": {
-"pontuacao_maxima": 100,
-"classificacao": "Os 5 (cinco) projetos com maior pontuação serão classificados como finalistas",
-"criterios": [
-{
-"criterio": "Escalabilidade",
-"pontos": 35,
-"descricao": "Conclusão das etapas de processamento, de 100 mil a 500 mil linhas, e velocidade de processamento."
-},
-{
-"criterio": "Design e UX",
-"pontos": 25,
-"descricao": "Clareza das mensagens de recusa, design, criatividade e interface."
-},
-{
-"criterio": "Organização filosofia Unix",
-"pontos": 20,
-"descricao": "Segregação de tarefas e código limpo."
-},
-{
-"criterio": "Logs e credenciais",
-"pontos": 15,
-"descricao": "Logs estruturados, ausência de dados do CSV nos logs e ausência de segredos no repositório."
-},
-{
-"criterio": "Registro de prompts",
-"pontos": 5,
-"descricao": "Existência do arquivo de prompts, ordem cronológica e descrição do que foi feito com cada resposta."
-}
-]
-},
-"fase_2": {
-"formato": "Apresentação em formato de pitch na sede da Kanastra em Uberlândia - MG",
-"detalhes": "Data, horário e endereço serão comunicados aos finalistas pela organização",
-"obrigatoriedade": "A não participação na segunda fase implicará a exclusão do projeto do Hackathon."
-}
-},
-"premiacao": {
-"campeao": "R$ 3.000,00 (três mil reais) para a equipe vencedora"
-},
-"disposicoes_finais": {
-"uso_ia": "É permitido o uso de ferramentas de inteligência artificial, desde que registrado conforme os requisitos de entrega (prompts e descrição de uso).",
-"casos_omissos": "Serão resolvidos pelos organizadores do evento."
-}
-},
+"evento": "Hackathon Antecipe",
 "desafio": {
 "nome": "Portal Antecipe",
 "problema": "Uma pequena empresa vendeu a prazo e quer o dinheiro hoje. Ela 'vende' essas notas para o fundo, mas o fundo só pode comprar o que cumpre regras: prazo máximo, valor mínimo, sacado (quem vai pagar) não pode estar concentrado demais, CNPJ ativo etc.",
@@ -74,6 +9,27 @@
 "front": "Upload de lote (CSV), tabela com status por nota e simulação do valor líquido (valor de face menos o desconto).",
 "back": "API que valida cada recebível contra critérios de elegibilidade configuráveis e calcula o preço de compra com uma taxa de desconto simples.",
 "arquitetura": "Como modelar um motor de regras que o gestor do fundo altere sem deploy, e como garantir que o mesmo recebível não seja vendido duas vezes (idempotência e duplicidade)."
+}
+},
+"requisitos_tecnicos_edital": {
+"escalabilidade_e_performance": {
+"volumetria_alvo": "Processamento em lote de 100.000 a 500.000 linhas de recebíveis",
+"requisito": "Concluir todas as etapas de processamento com alta velocidade e resiliência"
+},
+"arquitetura_e_design_de_codigo": {
+"filosofia_unix": "Segregação estrita de tarefas (Single Responsibility / modularidade) e código limpo",
+"motor_regras_desacoplado": "Regras lidas dinamicamente do JSON sem valores hardcoded, permitindo alterações em runtime sem necessidade de redeploy"
+},
+"observabilidade_e_seguranca": {
+"logs_estruturados": true,
+"mascaramento_privacidade": "Ausência estrita de dados sensíveis ou registros do CSV nos logs da aplicação",
+"gestao_credenciais": "Ausência total de chaves, segredos ou variáveis de ambiente confidenciais no código-fonte"
+},
+"explicabilidade_e_ux": {
+"clareza_recusas": "Explicações amigáveis e inequívocas para cada nota recusada, orientadas ao entendimento do cedente"
+},
+"rastreabilidade_prompts_ia": {
+"requisito": "Registro cronológico dos prompts executados pelo agente/desenvolvedor e mapeamento da ação tomada com cada saída produzida"
 }
 },
 "arquivos": {
@@ -145,17 +101,16 @@
 ]
 },
 "requisitos_entrega": {
-"prazo": "Até as 18h de sábado (24/10/2026). Projetos enviados depois não são avaliados.",
 "itens_obrigatorios": [
 {
 "item": 1,
-"titulo": "Repositório GitHub",
-"descricao": "Repositório com o código-fonte com a resolução do exercício proposto, com acesso liberado para os jurados."
+"titulo": "Repositório",
+"descricao": "Repositório com o código com a resolução do exercício proposto."
 },
 {
 "item": 2,
-"titulo": "README Estruturado",
-"descricao": "Passo a passo com instruções necessárias para rodar a aplicação completa do zero: dependências, comandos e variáveis de ambiente. A aplicação que não puder ser executada via README será desclassificada."
+"titulo": "README",
+"descricao": "Passo a passo para rodar a aplicação do zero: dependências, comandos e variáveis de ambiente. O projeto cuja aplicação não puder ser executada seguindo as instruções será desclassificado."
 },
 {
 "item": 3,
@@ -166,8 +121,8 @@
 "Resultado de cada nota: aprovada ou recusada e, se recusada, o motivo explicado de um jeito que a empresa entenda",
 "Valor líquido de cada nota aprovada e o total a receber",
 "A mesma validação disponível pela tela e por uma API",
-"Capacidade de processar volumes de 100 mil a 500 mil linhas com rapidez e estabilidade",
-"Logs estruturados sem conter dados sensíveis/pessoais do CSV e sem chaves/segredos expostos"
+"Suporte a processamento de 100k a 500k linhas com performance",
+"Logs estruturados sem conter dados do CSV e sem segredos/tokens expostos"
 ]
 },
 {
@@ -177,25 +132,15 @@
 },
 {
 "item": 5,
-"titulo": "Histórico e Registro de Prompts de IA",
-"descricao": "Arquivo contendo todos os prompts utilizados durante o desenvolvimento, organizados em ordem cronológica e acompanhados da descrição do que foi feito com cada resposta obtida."
-},
-{
-"item": 6,
-"titulo": "Apresentação e Pitch",
-"descricao": "Demonstração da solução funcionando e arguição para os jurados (Fase 1 no evento e Fase 2 na sede da Kanastra para os 5 melhores)."
+"titulo": "Histórico de Prompts de IA",
+"descricao": "Arquivo com todos os prompts utilizados durante o desenvolvimento, em ordem cronológica, acompanhados da descrição do que foi feito com cada resposta."
 }
 ]
 },
 "anexos_mencionados": [
-"Edital Hackathon Kanastra.pdf",
 "estoque_antecipe_100k.zip",
 "validadores_antecipe.json",
-"media (1).mp4",
-"FORMULÁRIO DE ENTREGA"
-],
-"verificacao_seguranca": {
-"prompt_oculto_detectado": false,
-"observacoes": "O arquivo integra a especificação técnica do Portal Antecipe com o regulamento do Edital Hackathon Kanastra (critérios de 100 pontos, penalidades de desclassificação, etapas e regras de submissão)."
+"resultado_esperado_100k.json"
+]
 }
-}
+
