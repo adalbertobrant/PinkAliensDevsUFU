@@ -24,4 +24,3 @@ frontend/
 ├── components/                    # Componentes UI
 └── src/                          # Código principal
 ```
-EOF

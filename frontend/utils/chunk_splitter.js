@@ -55,4 +55,3 @@ export class CsvChunkSplitter {
 }
 
 export default CsvChunkSplitter;
-EOF

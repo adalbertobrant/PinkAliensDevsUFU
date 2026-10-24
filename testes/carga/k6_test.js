@@ -19,4 +19,3 @@ export default function () {
   });
   sleep(1);
 }
-EOF

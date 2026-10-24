@@ -8,4 +8,3 @@
 
 ## Objetivo
 Garantir processamento eficiente para 100k-500k linhas com testes rápidos.
-EOF

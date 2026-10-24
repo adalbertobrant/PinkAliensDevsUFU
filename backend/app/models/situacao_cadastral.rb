@@ -5,4 +5,3 @@ class SituacaoCadastral < ApplicationRecord
   validates :cnpj_normalizado, presence: true
   validates :situacao, presence: true
 end
-EOF

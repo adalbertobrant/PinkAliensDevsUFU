@@ -17,4 +17,3 @@ Otimizado para processar 100k-500k linhas com alta velocidade.
 
 ## Build
 Compilado como extensão nativa Ruby via Rice.
-EOF
